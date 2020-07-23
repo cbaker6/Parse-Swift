@@ -10,6 +10,11 @@ import Foundation
 import Combine
 
 internal extension API {
+    
+    class Subscriptions: NSObject {
+        var subs: AnyCancellable? = nil
+    }
+    
     struct Command<T, U>: Encodable where T: Encodable {
         typealias ReturnType = U // swiftlint:disable:this nesting
         let method: API.Method
@@ -17,6 +22,7 @@ internal extension API {
         let body: T?
         let mapper: ((Data) throws -> U)
         let params: [String: String?]?
+        let subs = Subscriptions()
 
         internal var data: Data? {
             return try? getJSONEncoder().encode(body)
@@ -75,7 +81,7 @@ internal extension API {
                 urlRequest.httpBody = body
             }
             urlRequest.httpMethod = method.rawValue
-
+/*
             let semaphore = DispatchSemaphore(value: 0)
             let dataTask = URLSession.shared.asyncDataTask(with: urlRequest) { result in
                 switch result {
@@ -97,11 +103,11 @@ internal extension API {
                 semaphore.signal()
             }
             dataTask.resume()
-            semaphore.wait()
-            /*
+            semaphore.wait()*/
+            
             let dataTask = URLSession.shared.asyncDataTask(with: urlRequest)
             print(dataTask)
-            _ = dataTask.sink(receiveCompletion: { errorCompletion in
+            let test = dataTask.sink(receiveCompletion: { errorCompletion in
                 if case let .failure(error) = errorCompletion {
                     completion(nil, error)
                 }
@@ -116,7 +122,8 @@ internal extension API {
                     return
                 }
                 completion(decoded, nil)
-            })*/
+            })
+            //self.subs.subs = test
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting

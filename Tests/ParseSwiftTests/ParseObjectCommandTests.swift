@@ -194,7 +194,7 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
         })
-
+/*
         scoreOnServer.saveAsync(options: [.useMasterKey],
                                 completion: { (saved, error) in
             guard let saved = saved else {
@@ -206,6 +206,6 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
-        })
+        })*/
     }
 }

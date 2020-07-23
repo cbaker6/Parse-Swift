@@ -35,7 +35,7 @@ extension URLSession {
     internal func asyncDataTask(with request: URLRequest) -> Future<Data, ParseError> {
 
         return Future<Data, ParseError> { promise in
-            let semaphore = DispatchSemaphore(value: 0)
+            /*let semaphore = DispatchSemaphore(value: 0)
             _ = self.dataTask(with: request) { (responseData, urlResponse, responseError) in
 
                 guard let responseData = responseData else {
@@ -52,17 +52,18 @@ extension URLSession {
                 semaphore.signal()
             }.resume()
             //semaphore.wait()
-            
-            /*let semaphore = DispatchSemaphore(value: 0)
-            _ = self.dataTaskPublisher(for: request).tryMap { data, response -> Data in
+            */
+            //let semaphore = DispatchSemaphore(value: 0)
+            let test = self.dataTaskPublisher(for: request).map { data, response -> Void in
                 guard let httpResponse = response as? HTTPURLResponse,
                      200...299 ~= httpResponse.statusCode else {
-                        throw ParseError(code: .unknownError, message: "Unable to async data: \(response).")
-
+                        promise(.failure(ParseError(code: .unknownError, message: "Unable to async data: \(response).")))
+                        return
                 }
-                return data
+                promise(.success(data))
+                //return data
 
-            }.sink(receiveCompletion: { (errorCompletion) in
+            }/*.sink(receiveCompletion: { (errorCompletion) in
                 if case let .failure(error) = errorCompletion {
                     switch error {
                     case let parseError as ParseError:
@@ -72,12 +73,12 @@ extension URLSession {
                                                     message: "Unable to connect to subscriber in async.")))
                     }
                 }
-                semaphore.signal()
+                //semaphore.signal()
             }, receiveValue: { data -> Void in
                 promise(.success(data))
-                semaphore.signal()
-            })
-            semaphore.wait()*/
+                //semaphore.signal()
+            })*/
+            //semaphore.wait()
         }
     }
 
