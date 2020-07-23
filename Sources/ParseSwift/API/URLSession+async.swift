@@ -11,9 +11,11 @@ import Combine
 
 extension URLSession {
 
-    internal func asyncDataTask(with request: URLRequest, completion: @escaping(Result<Data, ParseError>) -> Void) -> URLSessionDataTask {
+    internal func asyncDataTask(with request: URLRequest,
+                                completion: @escaping(Result<Data, ParseError>) -> Void) {
+
         let semaphore = DispatchSemaphore(value: 0)
-        return dataTask(with: request) { (responseData, urlResponse, responseError) in
+        dataTask(with: request) { (responseData, urlResponse, responseError) in
 
             guard let responseData = responseData else {
                 guard let error = responseError as? ParseError else {
@@ -27,21 +29,21 @@ extension URLSession {
 
             completion(.success(responseData))
             semaphore.signal()
-        }//.resume()
-        //semaphore.wait()
+        }.resume()
+        semaphore.wait()
     }
 
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     internal func asyncDataTask(with request: URLRequest) -> Future<Data, ParseError> {
 
         return Future<Data, ParseError> { promise in
-            /*let semaphore = DispatchSemaphore(value: 0)
+            let semaphore = DispatchSemaphore(value: 0)
             _ = self.dataTask(with: request) { (responseData, urlResponse, responseError) in
 
                 guard let responseData = responseData else {
                     guard let error = responseError as? ParseError else {
                         promise(.failure(ParseError(code: .unknownError,
-                                                    message: "Unable to sync data: \(String(describing: urlResponse)).")))
+                                                    message: "Unable to sync: \(String(describing: urlResponse)).")))
                         return
                     }
                     promise(.failure(error))
@@ -51,16 +53,18 @@ extension URLSession {
                 promise(.success(responseData))
                 semaphore.signal()
             }.resume()
-            //semaphore.wait()
-            */
-            //let semaphore = DispatchSemaphore(value: 0)
+            semaphore.wait()
+            /*
+            let semaphore = DispatchSemaphore(value: 0)
             let test = self.dataTaskPublisher(for: request).map { data, response -> Void in
                 guard let httpResponse = response as? HTTPURLResponse,
                      200...299 ~= httpResponse.statusCode else {
-                        promise(.failure(ParseError(code: .unknownError, message: "Unable to async data: \(response).")))
+                        promise(.failure(ParseError(code: .unknownError, message: "Unable to async: \(response).")))
+                        semaphore.signal()
                         return
                 }
                 promise(.success(data))
+                semaphore.signal()
                 //return data
 
             }/*.sink(receiveCompletion: { (errorCompletion) in
@@ -78,7 +82,7 @@ extension URLSession {
                 promise(.success(data))
                 //semaphore.signal()
             })*/
-            //semaphore.wait()
+            semaphore.wait()*/
         }
     }
 

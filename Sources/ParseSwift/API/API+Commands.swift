@@ -10,11 +10,7 @@ import Foundation
 import Combine
 
 internal extension API {
-    
-    class Subscriptions: NSObject {
-        var subs: AnyCancellable? = nil
-    }
-    
+
     struct Command<T, U>: Encodable where T: Encodable {
         typealias ReturnType = U // swiftlint:disable:this nesting
         let method: API.Method
@@ -22,7 +18,6 @@ internal extension API {
         let body: T?
         let mapper: ((Data) throws -> U)
         let params: [String: String?]?
-        let subs = Subscriptions()
 
         internal var data: Data? {
             return try? getJSONEncoder().encode(body)
@@ -66,7 +61,6 @@ internal extension API {
             }
         }
 
-        @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
         public func executeAsync(options: API.Options, completion: @escaping(U?, ParseError?) -> Void) {
             let params = self.params?.getQueryItems()
             let headers = API.getHeaders(options: options)
@@ -81,49 +75,46 @@ internal extension API {
                 urlRequest.httpBody = body
             }
             urlRequest.httpMethod = method.rawValue
-/*
-            let semaphore = DispatchSemaphore(value: 0)
-            let dataTask = URLSession.shared.asyncDataTask(with: urlRequest) { result in
-                switch result {
 
-                case .success(let responseData):
-                    guard let decoded = try? self.mapper(responseData) else {
-                        guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
-                            completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+            if #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) {
+                _ = URLSession.shared.asyncDataTask(with: urlRequest)
+                    .sink(receiveCompletion: { errorCompletion in
+                        if case let .failure(error) = errorCompletion {
+                            completion(nil, error)
+                        }
+                    }, receiveValue: { responseData in
+
+                        guard let decoded = try? self.mapper(responseData) else {
+                            guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                                completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                                return
+                            }
+                            completion(nil, parseError)
                             return
                         }
-                        completion(nil, parseError)
-                        return
-                    }
-                    completion(decoded, nil)
+                        completion(decoded, nil)
+                    })
+            } else {
+                // Fallback on earlier versions
+                _ = URLSession.shared.asyncDataTask(with: urlRequest) { result in
+                    switch result {
 
-                case .failure(let error):
-                    completion(nil, error)
+                    case .success(let responseData):
+                        guard let decoded = try? self.mapper(responseData) else {
+                            guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                                completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                                return
+                            }
+                            completion(nil, parseError)
+                            return
+                        }
+                        completion(decoded, nil)
+
+                    case .failure(let error):
+                        completion(nil, error)
+                    }
                 }
-                semaphore.signal()
             }
-            dataTask.resume()
-            semaphore.wait()*/
-            
-            let dataTask = URLSession.shared.asyncDataTask(with: urlRequest)
-            print(dataTask)
-            let test = dataTask.sink(receiveCompletion: { errorCompletion in
-                if case let .failure(error) = errorCompletion {
-                    completion(nil, error)
-                }
-            }, receiveValue: { responseData in
-
-                guard let decoded = try? self.mapper(responseData) else {
-                    guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
-                        completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
-                        return
-                    }
-                    completion(nil, parseError)
-                    return
-                }
-                completion(decoded, nil)
-            })
-            //self.subs.subs = test
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting
