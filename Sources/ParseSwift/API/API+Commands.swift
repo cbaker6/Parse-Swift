@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Combine
 
 internal extension API {
     struct Command<T, U>: Encodable where T: Encodable {
@@ -47,7 +48,7 @@ internal extension API {
                 urlRequest.httpBody = body
             }
             urlRequest.httpMethod = method.rawValue
-            let responseData = try URLSession.shared.syncDataTask(with: urlRequest)
+            let responseData = try URLSession.shared.syncDataTask(with: urlRequest).get()
             do {
                 return try mapper(responseData)
             } catch {
@@ -57,6 +58,65 @@ internal extension API {
                     throw ParseError(code: .unknownError, message: "cannot decode error")
                 }
             }
+        }
+
+        @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+        public func executeAsync(options: API.Options, completion: @escaping(U?, ParseError?) -> Void) {
+            let params = self.params?.getQueryItems()
+            let headers = API.getHeaders(options: options)
+            let url = ParseConfiguration.serverURL.appendingPathComponent(path.urlComponent)
+
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+            components.queryItems = params
+
+            var urlRequest = URLRequest(url: components.url!)
+            urlRequest.allHTTPHeaderFields = headers
+            if let body = data {
+                urlRequest.httpBody = body
+            }
+            urlRequest.httpMethod = method.rawValue
+
+            let semaphore = DispatchSemaphore(value: 0)
+            let dataTask = URLSession.shared.asyncDataTask(with: urlRequest) { result in
+                switch result {
+
+                case .success(let responseData):
+                    guard let decoded = try? self.mapper(responseData) else {
+                        guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                            completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                            return
+                        }
+                        completion(nil, parseError)
+                        return
+                    }
+                    completion(decoded, nil)
+
+                case .failure(let error):
+                    completion(nil, error)
+                }
+                semaphore.signal()
+            }
+            dataTask.resume()
+            semaphore.wait()
+            /*
+            let dataTask = URLSession.shared.asyncDataTask(with: urlRequest)
+            print(dataTask)
+            _ = dataTask.sink(receiveCompletion: { errorCompletion in
+                if case let .failure(error) = errorCompletion {
+                    completion(nil, error)
+                }
+            }, receiveValue: { responseData in
+
+                guard let decoded = try? self.mapper(responseData) else {
+                    guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                        completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                        return
+                    }
+                    completion(nil, parseError)
+                    return
+                }
+                completion(decoded, nil)
+            })*/
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting

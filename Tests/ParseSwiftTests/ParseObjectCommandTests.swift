@@ -37,7 +37,7 @@ class ParseObjectCommandTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        guard let url = URL(string: "http://localhost:1337/1") else {
+        guard let url = URL(string: "https://localhost:1337/1") else {
             XCTFail("Should create valid URL")
             return
         }
@@ -161,5 +161,51 @@ class ParseObjectCommandTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
+    }
+
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSaveAsync() {
+        var score = GameScore(score: 10)
+        let objectId = "yarr"
+        score.objectId = objectId
+
+        var scoreOnServer = score
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        scoreOnServer.saveAsync(options: [], completion: { (saved, error) in
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNil(error)
+            XCTAssertNotNil(saved)
+            XCTAssertNotNil(saved.createdAt)
+            XCTAssertNotNil(saved.updatedAt)
+            XCTAssertNil(saved.ACL)
+        })
+
+        scoreOnServer.saveAsync(options: [.useMasterKey],
+                                completion: { (saved, error) in
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNil(error)
+            XCTAssertNotNil(saved)
+            XCTAssertNotNil(saved.createdAt)
+            XCTAssertNotNil(saved.updatedAt)
+            XCTAssertNil(saved.ACL)
+        })
     }
 }
