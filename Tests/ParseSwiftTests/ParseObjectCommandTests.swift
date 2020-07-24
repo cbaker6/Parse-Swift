@@ -246,8 +246,11 @@ class ParseObjectCommandTests: XCTestCase {
                 return nil
             }
         }
+        // Create an expectation for a background download task.
+        let expectation = XCTestExpectation(description: "Save object")
 
         scoreOnServer.saveAsync(options: [], completion: { (saved, error) in
+            expectation.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
                 return
@@ -258,7 +261,7 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
         })
-
+        wait(for: [expectation], timeout: 10.0)
         scoreOnServer.saveAsync(options: [.useMasterKey],
                                 completion: { (saved, error) in
             guard let saved = saved else {
