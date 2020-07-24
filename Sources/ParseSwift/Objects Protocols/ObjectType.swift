@@ -190,6 +190,14 @@ public extension ObjectType {
         return try fetchCommand().execute(options: options)
     }
 
+    func fetchAsync(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
+        do {
+            try fetchCommand().executeAsync(options: options, completion: completion)
+        } catch {
+            completion(nil, nil)
+        }
+    }
+
     internal func saveCommand() -> API.Command<Self, Self> {
         return API.Command<Self, Self>.saveCommand(self)
     }

@@ -130,6 +130,55 @@ class ParseUserCommandTests: XCTestCase {
         }
     }
 
+    func testFetchAsync() {
+        var user = User()
+        let objectId = "yarr"
+        user.objectId = objectId
+
+        var userOnServer = user
+        userOnServer.createdAt = Date()
+        userOnServer.updatedAt = Date()
+        userOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try userOnServer.getEncoderWithoutSkippingKeys().encode(userOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        let expectation1 = XCTestExpectation(description: "Fetch object1")
+        user.fetchAsync(options: [], completion: { (fetched, error) in
+            expectation1.fulfill()
+            guard let fetched = fetched else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(fetched)
+            XCTAssertNil(error)
+            XCTAssertNotNil(fetched.createdAt)
+            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertNil(fetched.ACL)
+        })
+
+        let expectation2 = XCTestExpectation(description: "Fetch object2")
+        user.fetchAsync(options: [.useMasterKey], completion: { (fetched, error) in
+            expectation2.fulfill()
+            guard let fetched = fetched else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(fetched)
+            XCTAssertNil(error)
+            XCTAssertNotNil(fetched.createdAt)
+            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertNil(fetched.ACL)
+        })
+        wait(for: [expectation1, expectation2], timeout: 10.0)
+    }
+
     func testSaveCommand() {
         let user = User()
         let className = user.className
@@ -216,6 +265,76 @@ class ParseUserCommandTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
+    }
+
+    func testUpdateAsync() { // swiftlint:disable:this function_body_length
+        var user = User()
+        let objectId = "yarr"
+        user.objectId = objectId
+        user.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        user.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        user.ACL = nil
+
+        var userOnServer = user
+        userOnServer.updatedAt = Date()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try userOnServer.getEncoderWithoutSkippingKeys().encode(userOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        let expectation1 = XCTestExpectation(description: "Fetch object1")
+        user.fetchAsync(options: [], completion: { (saved, error) in
+            expectation1.fulfill()
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(saved)
+            XCTAssertNil(error)
+
+            guard let savedCreatedAt = saved.createdAt,
+                let savedUpdatedAt = saved.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = user.createdAt,
+                let originalUpdatedAt = user.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+            XCTAssertNil(saved.ACL)
+        })
+
+        let expectation2 = XCTestExpectation(description: "Fetch object1")
+        user.fetchAsync(options: [.useMasterKey], completion: { (saved, error) in
+            expectation2.fulfill()
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(saved)
+            XCTAssertNil(error)
+            guard let savedCreatedAt = saved.createdAt,
+                let savedUpdatedAt = saved.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = user.createdAt,
+                let originalUpdatedAt = user.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+            XCTAssertNil(saved.ACL)
+        })
     }
 
     func testUserSignUp() {
