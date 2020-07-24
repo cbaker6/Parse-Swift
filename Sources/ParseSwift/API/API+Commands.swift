@@ -18,6 +18,7 @@ internal extension API {
         let body: T?
         let mapper: ((Data) throws -> U)
         let params: [String: String?]?
+        let queue = DispatchQueue(label: "API.Command.\(UUID().uuidString)")
 
         internal var data: Data? {
             return try? getJSONEncoder().encode(body)
@@ -62,6 +63,18 @@ internal extension API {
         }
 
         public func executeAsync(options: API.Options, completion: @escaping(U?, ParseError?) -> Void) {
+            queue.async {
+                do {
+                    let response = try self.execute(options: options)
+                    completion(response, nil)
+                } catch let error as ParseError {
+                    completion(nil, error)
+                } catch let error {
+                    // we can probably do something better
+                    fatalError("Unsupported error: \(error)")
+                }
+            }
+            /*
             let params = self.params?.getQueryItems()
             let headers = API.getHeaders(options: options)
             let url = ParseConfiguration.serverURL.appendingPathComponent(path.urlComponent)
@@ -114,7 +127,7 @@ internal extension API {
                         completion(nil, error)
                     }
                 }
-            }
+            }*/
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting

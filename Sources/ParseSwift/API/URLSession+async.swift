@@ -11,6 +11,25 @@ import Combine
 
 extension URLSession {
 
+    internal func dataTask(
+        with request: URLRequest,
+        completion: @escaping(Result<Data, ParseError>) -> Void
+    ) -> URLSessionDataTask {
+        return dataTask(with: request) { responseData, urlResponse, responseError in
+            guard let responseData = responseData else {
+                guard let error = responseError as? ParseError else {
+                    completion(.failure(ParseError(code: .unknownError,
+                                               message: "Unable to sync data: \(String(describing: urlResponse)).")))
+                    return
+                }
+                completion(.failure(error))
+                return
+            }
+
+            completion(.success(responseData))
+        }
+    }
+
     internal func asyncDataTask(with request: URLRequest,
                                 completion: @escaping(Result<Data, ParseError>) -> Void) {
 
