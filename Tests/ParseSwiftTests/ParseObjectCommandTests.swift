@@ -246,8 +246,9 @@ class ParseObjectCommandTests: XCTestCase {
                 return nil
             }
         }
-
+        let expectation = XCTestExpectation(description: "Save object")
         scoreOnServer.saveAsync(options: [], completion: { (saved, error) in
+            expectation.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
                 return
@@ -258,8 +259,8 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
         })
-
-        scoreOnServer.saveAsync(options: [.useMasterKey],
+        wait(for: [expectation], timeout: 10.0)
+        /*scoreOnServer.saveAsync(options: [.useMasterKey],
                                 completion: { (saved, error) in
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -270,6 +271,6 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
-        })
+        })*/
     }
 }
