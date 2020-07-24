@@ -70,8 +70,7 @@ internal extension API {
                 } catch let error as ParseError {
                     completion(nil, error)
                 } catch let error {
-                    // we can probably do something better
-                    fatalError("Unsupported error: \(error)")
+                    completion(nil, ParseError(code: .unknownError, message: error.localizedDescription))
                 }
             }
             /*
