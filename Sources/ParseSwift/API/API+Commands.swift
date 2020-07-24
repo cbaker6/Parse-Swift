@@ -36,6 +36,26 @@ internal extension API {
         }
 
         public func execute(options: API.Options) throws -> U {
+            let semaphore = DispatchSemaphore(value: 0)
+            var responseData: U?
+            var parseError: ParseError?
+
+            self.executeAsync(options: options) { (response, error) in
+                responseData = response
+                parseError = error
+                semaphore.signal()
+            }
+            semaphore.wait()
+
+            guard let response = responseData else {
+                guard let error = parseError else {
+                    throw ParseError(code: .unknownError, message: "error unknown")
+                }
+                throw error
+            }
+
+            return response
+            /*
             let params = self.params?.getQueryItems()
             let headers = API.getHeaders(options: options)
             let url = ParseConfiguration.serverURL.appendingPathComponent(path.urlComponent)
@@ -58,7 +78,7 @@ internal extension API {
                 } catch {
                     throw ParseError(code: .unknownError, message: "cannot decode response: \(error)")
                 }
-            }
+            }*/
         }
 
         public func executeAsync(options: API.Options, completion: @escaping(U?, ParseError?) -> Void) {
@@ -75,7 +95,7 @@ internal extension API {
                 urlRequest.httpBody = body
             }
             urlRequest.httpMethod = method.rawValue
-
+/*
             if #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) {
                 _ = URLSession.shared.asyncDataTask(with: urlRequest)
                     .sink(receiveCompletion: { errorCompletion in
@@ -95,8 +115,9 @@ internal extension API {
                         completion(decoded, nil)
                     })
             } else {
+            */
                 // Fallback on earlier versions
-                _ = URLSession.shared.asyncDataTask(with: urlRequest) { result in
+                _ = URLSession.shared.dataTask(with: urlRequest) { result in
                     switch result {
 
                     case .success(let responseData):
@@ -114,7 +135,7 @@ internal extension API {
                         completion(nil, error)
                     }
                 }
-            }
+            //}
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting

@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 @testable import ParseSwift
 
-class ParseObjectCommandTests: XCTestCase {
+class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_length
 
     struct GameScore: ParseSwift.ObjectType {
         //: Those are required for Object
@@ -100,6 +100,55 @@ class ParseObjectCommandTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
+    }
+
+    func testFetchAsync() {
+        var score = GameScore(score: 10)
+        let objectId = "yarr"
+        score.objectId = objectId
+
+        var scoreOnServer = score
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        let expectation1 = XCTestExpectation(description: "Fetch object1")
+        score.saveAsync(options: [], completion: { (fetched, error) in
+            expectation1.fulfill()
+            guard let fetched = fetched else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(fetched)
+            XCTAssertNil(error)
+            XCTAssertNotNil(fetched.createdAt)
+            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertNil(fetched.ACL)
+        })
+
+        let expectation2 = XCTestExpectation(description: "Fetch object2")
+        score.saveAsync(options: [.useMasterKey], completion: { (fetched, error) in
+            expectation2.fulfill()
+            guard let fetched = fetched else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(fetched)
+            XCTAssertNil(error)
+            XCTAssertNotNil(fetched.createdAt)
+            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertNil(fetched.ACL)
+        })
+        wait(for: [expectation1, expectation2], timeout: 10.0)
     }
 
     func testSaveCommand() {
@@ -227,13 +276,11 @@ class ParseObjectCommandTests: XCTestCase {
         }
     }
 
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     func testSaveAsync() {
-        var score = GameScore(score: 10)
-        let objectId = "yarr"
-        score.objectId = objectId
+        let score = GameScore(score: 10)
 
         var scoreOnServer = score
+        scoreOnServer.objectId = "yarr"
         scoreOnServer.createdAt = Date()
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
@@ -246,10 +293,10 @@ class ParseObjectCommandTests: XCTestCase {
                 return nil
             }
         }
-        // Create an expectation for a background download task.
-        let expectation = XCTestExpectation(description: "Save object")
 
-        scoreOnServer.saveAsync(options: [], completion: { (saved, error) in
+        let expectation = XCTestExpectation(description: "Save object1")
+
+        score.saveAsync(options: [], completion: { (saved, error) in
             expectation.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -261,9 +308,11 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
         })
-        wait(for: [expectation], timeout: 10.0)
-        scoreOnServer.saveAsync(options: [.useMasterKey],
+
+        let expectation2 = XCTestExpectation(description: "Save object2")
+        score.saveAsync(options: [.useMasterKey],
                                 completion: { (saved, error) in
+            expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
                 return
@@ -274,5 +323,77 @@ class ParseObjectCommandTests: XCTestCase {
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
         })
+        wait(for: [expectation, expectation2], timeout: 10.0)
+    }
+
+    func testUpdateAsync() { // swiftlint:disable:this function_body_length
+        var score = GameScore(score: 10)
+        score.objectId = "yarr"
+        score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.ACL = nil
+
+        var scoreOnServer = score
+        scoreOnServer.updatedAt = Date()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        let expectation = XCTestExpectation(description: "Save object1")
+
+        score.saveAsync(options: [], completion: { (saved, error) in
+            expectation.fulfill()
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(saved)
+            XCTAssertNil(error)
+            guard let savedCreatedAt = saved.createdAt,
+                let savedUpdatedAt = saved.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = score.createdAt,
+                let originalUpdatedAt = score.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+            XCTAssertNil(saved.ACL)
+        })
+
+        let expectation2 = XCTestExpectation(description: "Save object2")
+        score.saveAsync(options: [.useMasterKey],
+                                completion: { (saved, error) in
+            expectation2.fulfill()
+            guard let saved = saved else {
+                XCTFail("Should unwrap")
+                return
+            }
+            XCTAssertNotNil(saved)
+            XCTAssertNil(error)
+            guard let savedCreatedAt = saved.createdAt,
+                let savedUpdatedAt = saved.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = score.createdAt,
+                let originalUpdatedAt = score.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+            XCTAssertNil(saved.ACL)
+        })
+        wait(for: [expectation, expectation2], timeout: 10.0)
     }
 }
