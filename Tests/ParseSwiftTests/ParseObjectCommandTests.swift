@@ -69,8 +69,8 @@ class ParseObjectCommandTests: XCTestCase {
         score.objectId = objectId
 
         var scoreOnServer = score
-        scoreOnServer.createdAt = Date()
-        scoreOnServer.updatedAt = Date()
+        scoreOnServer.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        scoreOnServer.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
         scoreOnServer.ACL = nil
 
         MockURLProtocol.mockRequests { _ in
@@ -84,8 +84,18 @@ class ParseObjectCommandTests: XCTestCase {
         do {
             let fetched = try score.fetch()
             XCTAssertNotNil(fetched)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
+            guard let fetchedCreatedAt = fetched.createdAt,
+                let fetchedUpdatedAt = fetched.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = scoreOnServer.createdAt,
+                let originalUpdatedAt = scoreOnServer.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            XCTAssertEqual(fetchedCreatedAt, originalCreatedAt)
+            XCTAssertEqual(fetchedUpdatedAt, originalUpdatedAt)
             XCTAssertNil(fetched.ACL)
         } catch {
             XCTFail(error.localizedDescription)
