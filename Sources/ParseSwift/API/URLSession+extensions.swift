@@ -1,8 +1,9 @@
-//  URLSession.swift
+//
+//  URLSession+extensions.swift
 //  ParseSwift
 //
-//  Created by Corey Baker on 7/22/20.
-//  Copyright © 2020 Parse. All rights reserved.
+//  Created by Florent Vilmart on 17-09-24.
+//  Copyright © 2017 Parse. All rights reserved.
 //
 
 import Foundation
