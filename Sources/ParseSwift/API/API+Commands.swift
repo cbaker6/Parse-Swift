@@ -55,30 +55,6 @@ internal extension API {
             }
 
             return response
-            /*
-            let params = self.params?.getQueryItems()
-            let headers = API.getHeaders(options: options)
-            let url = ParseConfiguration.serverURL.appendingPathComponent(path.urlComponent)
-
-            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-            components.queryItems = params
-
-            var urlRequest = URLRequest(url: components.url!)
-            urlRequest.allHTTPHeaderFields = headers
-            if let body = data {
-                urlRequest.httpBody = body
-            }
-            urlRequest.httpMethod = method.rawValue
-            let responseData = try URLSession.shared.syncDataTask(with: urlRequest).get()
-            do {
-                return try mapper(responseData)
-            } catch {
-                do {
-                    throw try getDecoder().decode(ParseError.self, from: responseData)
-                } catch {
-                    throw ParseError(code: .unknownError, message: "cannot decode response: \(error)")
-                }
-            }*/
         }
 
         public func executeAsync(options: API.Options, completion: @escaping(U?, ParseError?) -> Void) {
@@ -93,6 +69,24 @@ internal extension API {
             urlRequest.allHTTPHeaderFields = headers
             if let body = data {
                 urlRequest.httpBody = body
+
+            URLSession.shared.dataTask(with: urlRequest) { result in
+                switch result {
+
+                case .success(let responseData):
+                    guard let decoded = try? self.mapper(responseData) else {
+                        guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                            completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                            return
+                        }
+                        completion(nil, parseError)
+                        return
+                    }
+                    completion(decoded, nil)
+
+                case .failure(let error):
+                    completion(nil, error)
+                }
             }
             urlRequest.httpMethod = method.rawValue
 /*
@@ -116,25 +110,6 @@ internal extension API {
                     })
             } else {
             */
-                // Fallback on earlier versions
-                _ = URLSession.shared.dataTask(with: urlRequest) { result in
-                    switch result {
-
-                    case .success(let responseData):
-                        guard let decoded = try? self.mapper(responseData) else {
-                            guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
-                                completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
-                                return
-                            }
-                            completion(nil, parseError)
-                            return
-                        }
-                        completion(decoded, nil)
-
-                    case .failure(let error):
-                        completion(nil, error)
-                    }
-                }
             //}
         }
 
