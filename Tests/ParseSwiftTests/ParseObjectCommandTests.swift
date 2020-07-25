@@ -122,7 +122,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
-        score.fetchAsync(options: [], completion: { (fetched, error) in
+        score.fetchAsync(options: []) { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -133,10 +133,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)
             XCTAssertNil(fetched.ACL)
-        })
+        }
 
         let expectation2 = XCTestExpectation(description: "Fetch object2")
-        score.fetchAsync(options: [.useMasterKey], completion: { (fetched, error) in
+        score.fetchAsync(options: [.useMasterKey]) { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -147,7 +147,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)
             XCTAssertNil(fetched.ACL)
-        })
+        }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
 
@@ -294,10 +294,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             }
         }
 
-        let expectation = XCTestExpectation(description: "Save object1")
+        let expectation1 = XCTestExpectation(description: "Save object1")
 
-        score.saveAsync(options: [], completion: { (saved, error) in
-            expectation.fulfill()
+        score.saveAsync(options: []) { (saved, error) in
+            expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
                 return
@@ -307,11 +307,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
-        })
+        }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        score.saveAsync(options: [.useMasterKey],
-                                completion: { (saved, error) in
+        score.saveAsync(options: [.useMasterKey]) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -322,8 +321,8 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
-        })
-        wait(for: [expectation, expectation2], timeout: 10.0)
+        }
+        wait(for: [expectation1, expectation2], timeout: 10.0)
     }
 
     func testUpdateAsync() { // swiftlint:disable:this function_body_length
@@ -345,10 +344,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             }
         }
 
-        let expectation = XCTestExpectation(description: "Save object1")
+        let expectation1 = XCTestExpectation(description: "Update object1")
 
-        score.saveAsync(options: [], completion: { (saved, error) in
-            expectation.fulfill()
+        score.saveAsync(options: []) { (saved, error) in
+            expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
                 return
@@ -368,11 +367,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertEqual(savedCreatedAt, originalCreatedAt)
             XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
             XCTAssertNil(saved.ACL)
-        })
+        }
 
-        let expectation2 = XCTestExpectation(description: "Save object2")
-        score.saveAsync(options: [.useMasterKey],
-                                completion: { (saved, error) in
+        let expectation2 = XCTestExpectation(description: "Update object2")
+        score.saveAsync(options: [.useMasterKey]) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -393,7 +391,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertEqual(savedCreatedAt, originalCreatedAt)
             XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
             XCTAssertNil(saved.ACL)
-        })
-        wait(for: [expectation, expectation2], timeout: 10.0)
+        }
+        wait(for: [expectation1, expectation2], timeout: 10.0)
     }
 }
