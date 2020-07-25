@@ -156,10 +156,20 @@ class ParseUserCommandTests: XCTestCase {
                 XCTFail("Should unwrap")
                 return
             }
+            guard let fetchedCreatedAt = fetched.createdAt,
+                let fetchedUpdatedAt = fetched.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = userOnServer.createdAt,
+                let originalUpdatedAt = userOnServer.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
             XCTAssertNotNil(fetched)
             XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertEqual(fetchedCreatedAt, originalCreatedAt)
+            XCTAssertEqual(fetchedUpdatedAt, originalUpdatedAt)
             XCTAssertNil(fetched.ACL)
         })
 
