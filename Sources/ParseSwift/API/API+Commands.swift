@@ -69,6 +69,8 @@ internal extension API {
             urlRequest.allHTTPHeaderFields = headers
             if let body = data {
                 urlRequest.httpBody = body
+            }
+            urlRequest.httpMethod = method.rawValue
 
             URLSession.shared.dataTask(with: urlRequest) { result in
                 switch result {
@@ -88,7 +90,7 @@ internal extension API {
                     completion(nil, error)
                 }
             }
-            urlRequest.httpMethod = method.rawValue
+            
 /*
             if #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) {
                 _ = URLSession.shared.asyncDataTask(with: urlRequest)
