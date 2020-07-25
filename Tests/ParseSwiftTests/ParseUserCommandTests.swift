@@ -130,14 +130,14 @@ class ParseUserCommandTests: XCTestCase {
         }
     }
 
-    func testFetchAsync() {
+    func testFetchAsync() { // swiftlint:disable:this function_body_length
         var user = User()
         let objectId = "yarr"
         user.objectId = objectId
 
         var userOnServer = user
-        userOnServer.createdAt = Date()
-        userOnServer.updatedAt = Date()
+        userOnServer.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        userOnServer.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
         userOnServer.ACL = nil
 
         MockURLProtocol.mockRequests { _ in
@@ -180,10 +180,20 @@ class ParseUserCommandTests: XCTestCase {
                 XCTFail("Should unwrap")
                 return
             }
+            guard let fetchedCreatedAt = fetched.createdAt,
+                let fetchedUpdatedAt = fetched.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
+            guard let originalCreatedAt = userOnServer.createdAt,
+                let originalUpdatedAt = userOnServer.updatedAt else {
+                    XCTFail("Should unwrap dates")
+                    return
+            }
             XCTAssertNotNil(fetched)
             XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
+            XCTAssertEqual(fetchedCreatedAt, originalCreatedAt)
+            XCTAssertEqual(fetchedUpdatedAt, originalUpdatedAt)
             XCTAssertNil(fetched.ACL)
         })
         wait(for: [expectation1, expectation2], timeout: 10.0)

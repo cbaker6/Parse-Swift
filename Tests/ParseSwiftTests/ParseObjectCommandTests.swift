@@ -122,7 +122,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
-        score.saveAsync(options: [], completion: { (fetched, error) in
+        score.fetchAsync(options: [], completion: { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -136,7 +136,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         })
 
         let expectation2 = XCTestExpectation(description: "Fetch object2")
-        score.saveAsync(options: [.useMasterKey], completion: { (fetched, error) in
+        score.fetchAsync(options: [.useMasterKey], completion: { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
