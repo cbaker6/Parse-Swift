@@ -102,24 +102,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
     }
 
-    func testFetchAsync() {
-        var score = GameScore(score: 10)
-        let objectId = "yarr"
-        score.objectId = objectId
-
-        var scoreOnServer = score
-        scoreOnServer.createdAt = Date()
-        scoreOnServer.updatedAt = Date()
-        scoreOnServer.ACL = nil
-
-        MockURLProtocol.mockRequests { _ in
-            do {
-                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
-                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
-            } catch {
-                return nil
-            }
-        }
+    func fetchAsync(score: GameScore, scoreOnServer: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
         score.fetchAsync(options: []) { (fetched, error) in
@@ -149,6 +132,30 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             XCTAssertNil(fetched.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
+    }
+
+    func testThreadSafeFetchAsync() {
+        var score = GameScore(score: 10)
+        let objectId = "yarr"
+        score.objectId = objectId
+
+        var scoreOnServer = score
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        DispatchQueue.concurrentPerform(iterations: 100) {_ in
+            self.fetchAsync(score: score, scoreOnServer: scoreOnServer)
+        }
     }
 
     func testSaveCommand() {
@@ -276,23 +283,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
     }
 
-    func testSaveAsync() {
-        let score = GameScore(score: 10)
-
-        var scoreOnServer = score
-        scoreOnServer.objectId = "yarr"
-        scoreOnServer.createdAt = Date()
-        scoreOnServer.updatedAt = Date()
-        scoreOnServer.ACL = nil
-
-        MockURLProtocol.mockRequests { _ in
-            do {
-                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
-                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
-            } catch {
-                return nil
-            }
-        }
+    func saveAsync(score: GameScore, scoreOnServer: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
@@ -325,15 +316,14 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
 
-    func testUpdateAsync() { // swiftlint:disable:this function_body_length
-        var score = GameScore(score: 10)
-        score.objectId = "yarr"
-        score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
-        score.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
-        score.ACL = nil
+    func testThreadSafeSaveAsync() {
+        let score = GameScore(score: 10)
 
         var scoreOnServer = score
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
         scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
 
         MockURLProtocol.mockRequests { _ in
             do {
@@ -343,6 +333,13 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
                 return nil
             }
         }
+
+        DispatchQueue.concurrentPerform(iterations: 100) {_ in
+            self.saveAsync(score: score, scoreOnServer: scoreOnServer)
+        }
+    }
+
+    func testUpdateAsync(score: GameScore, scoreOnServer: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
@@ -394,4 +391,28 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
-}
+
+    func testThreadSafeUpdateAsync() {
+        var score = GameScore(score: 10)
+        score.objectId = "yarr"
+        score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.ACL = nil
+
+        var scoreOnServer = score
+        scoreOnServer.updatedAt = Date()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        DispatchQueue.concurrentPerform(iterations: 100) {_ in
+            self.saveAsync(score: score, scoreOnServer: scoreOnServer)
+        }
+    }
+} // swiftlint:disable:this file_length
