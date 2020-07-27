@@ -9,7 +9,7 @@
 import Foundation
 
 typealias ParseObjectBatchCommand<T> = BatchCommand<T, T> where T: ObjectType
-typealias ParseObjectBatchResponse<T> = [(T, ParseError?)]
+typealias ParseObjectBatchResponse<T> = [(T?, ParseError?)]
 // swiftlint:disable line_length
 typealias RESTBatchCommandType<T> = API.Command<ParseObjectBatchCommand<T>, ParseObjectBatchResponse<T>> where T: ObjectType
 // swiftlint:enable line_length
@@ -28,15 +28,15 @@ internal struct SaveOrUpdateResponse: Codable {
     var createdAt: Date?
     var updatedAt: Date?
 
-    var isCreate: Bool {
+    var isSaved: Bool {
         return objectId != nil && createdAt != nil
     }
 
     func asSaveResponse() -> SaveResponse {
-        guard let objectId = objectId, let createdAt = createdAt else {
+        guard let objectId = objectId, let createdAt = createdAt, let updatedAt = updatedAt else {
             fatalError("Cannot create a SaveResponse without objectId")
         }
-        return SaveResponse(objectId: objectId, createdAt: createdAt)
+        return SaveResponse(objectId: objectId, createdAt: createdAt, updatedAt: updatedAt)
     }
 
     func asUpdateResponse() -> UpdateResponse {
@@ -47,10 +47,6 @@ internal struct SaveOrUpdateResponse: Codable {
     }
 
     func apply<T>(_ object: T) -> T where T: ObjectType {
-        if isCreate {
-            return asSaveResponse().apply(object)
-        } else {
-            return asUpdateResponse().apply(object)
-        }
+        return asSaveResponse().apply(object)
     }
 }
