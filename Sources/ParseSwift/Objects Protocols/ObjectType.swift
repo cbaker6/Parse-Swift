@@ -222,7 +222,7 @@ extension ObjectType {
     }
 }
 
-public struct FindResult<T>: Decodable where T: ObjectType {
+internal struct FindResult<T>: Codable where T: ObjectType {
     let results: [T]
     let count: Int?
 }

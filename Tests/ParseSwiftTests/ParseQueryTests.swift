@@ -28,12 +28,6 @@ class ParseQueryTests: XCTestCase {
         }
     }
 
-    struct FindResultCodable<T>: Codable where T: ObjectType {
-        let results: [T]
-        let count: Int?
-
-    }
-
     override func setUp() {
         super.setUp()
         guard let url = URL(string: "http://localhost:1337/1") else {
@@ -67,7 +61,7 @@ class ParseQueryTests: XCTestCase {
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
@@ -107,14 +101,14 @@ class ParseQueryTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
     }
 
-    func testFindAsync() {
+    func testThreadSafeFindAsync() {
         var scoreOnServer = GameScore(score: 10)
         scoreOnServer.objectId = "yarr"
         scoreOnServer.createdAt = Date()
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
@@ -136,7 +130,7 @@ class ParseQueryTests: XCTestCase {
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
@@ -176,14 +170,14 @@ class ParseQueryTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
     }
 
-    func testFirstAsync() {
+    func testThreadSafeFirstAsync() {
         var scoreOnServer = GameScore(score: 10)
         scoreOnServer.objectId = "yarr"
         scoreOnServer.createdAt = Date()
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
@@ -205,7 +199,7 @@ class ParseQueryTests: XCTestCase {
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
@@ -243,14 +237,14 @@ class ParseQueryTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
     }
 
-    func testCountAsync() {
+    func testThreadSafeCountAsync() {
         var scoreOnServer = GameScore(score: 10)
         scoreOnServer.objectId = "yarr"
         scoreOnServer.createdAt = Date()
         scoreOnServer.updatedAt = Date()
         scoreOnServer.ACL = nil
 
-        let results = FindResultCodable<GameScore>(results: [scoreOnServer], count: 1)
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
         MockURLProtocol.mockRequests { _ in
             do {
                 let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)

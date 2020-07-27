@@ -14,16 +14,16 @@ typealias ParseObjectBatchResponse<T> = [(T, ParseError?)]
 typealias RESTBatchCommandType<T> = API.Command<ParseObjectBatchCommand<T>, ParseObjectBatchResponse<T>> where T: ObjectType
 // swiftlint:enable line_length
 
-public struct BatchCommand<T, U>: Encodable where T: Encodable {
+internal struct BatchCommand<T, U>: Encodable where T: Encodable {
     let requests: [API.Command<T, U>]
 }
 
-public struct BatchResponseItem<T>: Decodable where T: Decodable {
+internal struct BatchResponseItem<T>: Codable where T: Codable {
     let success: T?
     let error: ParseError?
 }
 
-struct SaveOrUpdateResponse: Decodable {
+internal struct SaveOrUpdateResponse: Codable {
     var objectId: String?
     var createdAt: Date?
     var updatedAt: Date?

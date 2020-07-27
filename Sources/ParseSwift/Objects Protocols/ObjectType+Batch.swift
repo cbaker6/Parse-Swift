@@ -29,7 +29,7 @@ extension Sequence where Element: ObjectType {
     }
 
     public func saveAll(options: API.Options = [],
-                        completion: @escaping ([(Element, ParseError?)]?, Error?) -> Void) {
+                        completion: @escaping ([(Element, ParseError?)]?, ParseError?) -> Void) {
         let commands = map { $0.saveCommand() }
         API.Command<Self.Element, Self.Element>
                 .batch(commands: commands)

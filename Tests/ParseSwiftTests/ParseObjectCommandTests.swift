@@ -283,7 +283,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
     }
 
-    func saveAsync(score: GameScore, scoreOnServer: GameScore) {
+    func saveAsync(score: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
@@ -335,11 +335,11 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.saveAsync(score: score, scoreOnServer: scoreOnServer)
+            self.saveAsync(score: score)
         }
     }
 
-    func testUpdateAsync(score: GameScore, scoreOnServer: GameScore) {
+    func updateAsync(score: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
@@ -412,7 +412,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.saveAsync(score: score, scoreOnServer: scoreOnServer)
+            self.updateAsync(score: score)
         }
     }
 } // swiftlint:disable:this file_length
