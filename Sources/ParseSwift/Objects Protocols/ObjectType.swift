@@ -182,7 +182,7 @@ public extension ObjectType {
         return try saveCommand().execute(options: options)
     }
 
-    func saveAsync(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
+    func save(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
         saveCommand().executeAsync(options: options, completion: completion)
     }
 
@@ -190,7 +190,7 @@ public extension ObjectType {
         return try fetchCommand().execute(options: options)
     }
 
-    func fetchAsync(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
+    func fetch(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
         do {
             try fetchCommand().executeAsync(options: options, completion: completion)
         } catch let error as ParseError {

@@ -12,6 +12,12 @@ public extension ObjectType {
     static func saveAll(_ objects: Self...) throws -> [(Self, ParseError?)] {
         return try objects.saveAll()
     }
+
+    static func saveAll(options: API.Options = [],
+                        _ objects: Self...,
+                        completion: @escaping ([(Self, ParseError?)]?, Error?) -> Void) {
+        objects.saveAll(options: options, completion: completion)
+    }
 }
 
 extension Sequence where Element: ObjectType {
@@ -20,5 +26,13 @@ extension Sequence where Element: ObjectType {
         return try API.Command<Self.Element, Self.Element>
                 .batch(commands: commands)
                 .execute(options: options)
+    }
+
+    public func saveAll(options: API.Options = [],
+                        completion: @escaping ([(Element, ParseError?)]?, Error?) -> Void) {
+        let commands = map { $0.saveCommand() }
+        API.Command<Self.Element, Self.Element>
+                .batch(commands: commands)
+                .executeAsync(options: options, completion: completion)
     }
 }

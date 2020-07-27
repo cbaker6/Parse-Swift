@@ -133,7 +133,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func fetchAsync(user: User, userOnServer: User) {
 
         let expectation1 = XCTestExpectation(description: "Fetch user1")
-        user.fetchAsync(options: []) { (fetched, error) in
+        user.fetch(options: []) { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -147,7 +147,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch user2")
-        user.fetchAsync(options: [.useMasterKey]) { (fetched, error) in
+        user.fetch(options: [.useMasterKey]) { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -277,7 +277,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func updateAsync(user: User, userOnServer: User) {
 
         let expectation1 = XCTestExpectation(description: "Update user1")
-        user.saveAsync(options: []) { (saved, error) in
+        user.save(options: []) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -302,7 +302,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Update user2")
-        user.saveAsync(options: [.useMasterKey]) { (saved, error) in
+        user.save(options: [.useMasterKey]) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -384,7 +384,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func serSignUpAsync(loginResponse: LoginSignupResponse) {
 
         let expectation1 = XCTestExpectation(description: "Signup user1")
-        User.signupAsync(username: loginResponse.username!, password: loginResponse.password!) { (signedUp, error) in
+        User.signup(username: loginResponse.username!, password: loginResponse.password!) { (signedUp, error) in
             expectation1.fulfill()
 
             guard let signedUp = signedUp else {
@@ -455,7 +455,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func userLoginAsync(loginResponse: LoginSignupResponse) {
 
         let expectation1 = XCTestExpectation(description: "Login user")
-        User.loginAsync(username: loginResponse.username!, password: loginResponse.password!) { loggedIn, error in
+        User.login(username: loginResponse.username!, password: loginResponse.password!) { loggedIn, error in
             expectation1.fulfill()
             guard let loggedIn = loggedIn else {
                 XCTFail("Should unwrap")

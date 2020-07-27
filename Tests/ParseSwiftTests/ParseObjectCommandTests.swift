@@ -105,7 +105,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
     func fetchAsync(score: GameScore, scoreOnServer: GameScore) {
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
-        score.fetchAsync(options: []) { (fetched, error) in
+        score.fetch(options: []) { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -119,7 +119,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch object2")
-        score.fetchAsync(options: [.useMasterKey]) { (fetched, error) in
+        score.fetch(options: [.useMasterKey]) { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -287,7 +287,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
-        score.saveAsync(options: []) { (saved, error) in
+        score.save(options: []) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -301,7 +301,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        score.saveAsync(options: [.useMasterKey]) { (saved, error) in
+        score.save(options: [.useMasterKey]) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -343,7 +343,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
-        score.saveAsync(options: []) { (saved, error) in
+        score.save(options: []) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -367,7 +367,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
-        score.saveAsync(options: [.useMasterKey]) { (saved, error) in
+        score.save(options: [.useMasterKey]) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
