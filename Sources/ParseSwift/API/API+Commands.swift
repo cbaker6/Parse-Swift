@@ -3,7 +3,7 @@
 //  ParseSwift (iOS)
 //
 //  Created by Florent Vilmart on 17-09-24.
-//  Copyright © 2017 Parse. All rights reserved.
+//  Copyright © 2020 Parse Community. All rights reserved.
 //
 
 import Foundation
@@ -60,8 +60,7 @@ internal extension API {
 
         }
 
-        public func executeAsync(options: API.Options,
-                                 callbackQueue: DispatchQueue?,
+        public func executeAsync(options: API.Options, callbackQueue: DispatchQueue?,
                                  completion: @escaping(U?, ParseError?) -> Void) {
             let params = self.params?.getQueryItems()
             let headers = API.getHeaders(options: options)
@@ -213,7 +212,6 @@ extension API.Command where T: ObjectType {
                 }
                 return [(nil, parseError)]
             }
-
         }
         let batchCommand = BatchCommand(requests: commands)
         return RESTBatchCommandType<T>(method: .POST, path: .batch, body: batchCommand, mapper: mapper)

@@ -3,7 +3,7 @@
 //  ParseSwift
 //
 //  Created by Florent Vilmart on 17-08-19.
-//  Copyright © 2017 Parse. All rights reserved.
+//  Copyright © 2020 Parse Community. All rights reserved.
 //
 
 import Foundation

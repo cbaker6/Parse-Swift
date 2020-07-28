@@ -1,3 +1,11 @@
+//
+//  ParseUserType.swift
+//  ParseSwift
+//
+//  Created by Florent Vilmart.
+//  Copyright © 2020 Parse Community. All rights reserved.
+//
+
 import Foundation
 
 internal struct CurrentUserInfo {
@@ -37,8 +45,7 @@ public extension UserType {
             .execute(options: [])
     }
 
-    static func login(username: String,
-                      password: String, callbackQueue: DispatchQueue = .main,
+    static func login(username: String, password: String, callbackQueue: DispatchQueue = .main,
                       completion: @escaping (Self?, ParseError?) -> Void) {
         return loginCommand(username: username, password: password)
             .executeAsync(options: [], callbackQueue: callbackQueue, completion: completion)
@@ -50,8 +57,7 @@ public extension UserType {
             .execute(options: [])
     }
 
-    static func signup(username: String,
-                       password: String, callbackQueue: DispatchQueue = .main,
+    static func signup(username: String, password: String, callbackQueue: DispatchQueue = .main,
                        completion: @escaping (Self?, ParseError?) -> Void) {
         return signupCommand(username: username, password: password)
             .executeAsync(options: [], callbackQueue: callbackQueue, completion: completion)
