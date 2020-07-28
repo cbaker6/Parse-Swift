@@ -37,9 +37,6 @@ internal extension API {
 
         public func execute(options: API.Options) throws -> U {
             var response: Result<U, ParseError>?
-
-            var responseData: U?
-            var parseError: ParseError?
             let group = DispatchGroup()
             group.enter()
             self.executeAsync(options: options, callbackQueue: nil) { result in

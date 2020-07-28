@@ -105,31 +105,33 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
     func fetchAsync(score: GameScore, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
-        score.fetch(options: [], callbackQueue: callbackQueue) { (fetched, error) in
+        score.fetch(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let fetched = fetched else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+            case .success(let fetched):
+                XCTAssertNotNil(fetched)
+                XCTAssertNotNil(fetched.createdAt)
+                XCTAssertNotNil(fetched.updatedAt)
+                XCTAssertNil(fetched.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(fetched)
-            XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
-            XCTAssertNil(fetched.ACL)
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch object2")
-        score.fetch(options: [.useMasterKey], callbackQueue: callbackQueue) { (fetched, error) in
+        score.fetch(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
+
             expectation2.fulfill()
-            guard let fetched = fetched else {
-                XCTFail("Should unwrap")
-                return
+            switch result {
+            case .success(let fetched):
+                XCTAssertNotNil(fetched)
+                XCTAssertNotNil(fetched.createdAt)
+                XCTAssertNotNil(fetched.updatedAt)
+                XCTAssertNil(fetched.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(fetched)
-            XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
-            XCTAssertNil(fetched.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
@@ -308,31 +310,34 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
-        score.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
+        score.save(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let saved):
+                XCTAssertNotNil(saved.createdAt)
+                XCTAssertNotNil(saved.updatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(saved)
-            XCTAssertNotNil(saved.createdAt)
-            XCTAssertNotNil(saved.updatedAt)
-            XCTAssertNil(saved.ACL)
+
         }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
+        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let saved):
+                XCTAssertNotNil(saved.createdAt)
+                XCTAssertNotNil(saved.updatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(saved)
-            XCTAssertNotNil(saved.createdAt)
-            XCTAssertNotNil(saved.updatedAt)
-            XCTAssertNil(saved.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
@@ -385,51 +390,54 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
-        score.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
+        score.save(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let saved):
+                guard let savedCreatedAt = saved.createdAt,
+                    let savedUpdatedAt = saved.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = score.createdAt,
+                    let originalUpdatedAt = score.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
-            guard let savedCreatedAt = saved.createdAt,
-                let savedUpdatedAt = saved.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = score.createdAt,
-                let originalUpdatedAt = score.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(saved.ACL)
+
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
-        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
+        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let saved):
+                guard let savedCreatedAt = saved.createdAt,
+                    let savedUpdatedAt = saved.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = score.createdAt,
+                    let originalUpdatedAt = score.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
-            guard let savedCreatedAt = saved.createdAt,
-                let savedUpdatedAt = saved.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = score.createdAt,
-                let originalUpdatedAt = score.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(saved.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }

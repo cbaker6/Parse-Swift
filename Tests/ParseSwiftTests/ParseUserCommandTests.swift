@@ -133,31 +133,34 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func fetchAsync(user: User, userOnServer: User) {
 
         let expectation1 = XCTestExpectation(description: "Fetch user1")
-        user.fetch(options: [], callbackQueue: .global(qos: .background)) { (fetched, error) in
+        user.fetch(options: [], callbackQueue: .global(qos: .background)) { result in
             expectation1.fulfill()
-            guard let fetched = fetched else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let fetched):
+                XCTAssertNotNil(fetched.createdAt)
+                XCTAssertNotNil(fetched.updatedAt)
+                XCTAssertNil(fetched.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(fetched)
-            XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
-            XCTAssertNil(fetched.ACL)
+
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch user2")
-        user.fetch(options: [.useMasterKey], callbackQueue: .global(qos: .background)) { (fetched, error) in
+        user.fetch(options: [.useMasterKey], callbackQueue: .global(qos: .background)) { result in
             expectation2.fulfill()
-            guard let fetched = fetched else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let fetched):
+                XCTAssertNotNil(fetched.createdAt)
+                XCTAssertNotNil(fetched.updatedAt)
+                XCTAssertNil(fetched.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(fetched)
-            XCTAssertNil(error)
-            XCTAssertNotNil(fetched.createdAt)
-            XCTAssertNotNil(fetched.updatedAt)
-            XCTAssertNil(fetched.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
@@ -277,52 +280,55 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func updateAsync(user: User, userOnServer: User, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Update user1")
-        user.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
+        user.save(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
-            }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
 
-            guard let savedCreatedAt = saved.createdAt,
-                let savedUpdatedAt = saved.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
+            switch result {
+
+            case .success(let saved):
+                guard let savedCreatedAt = saved.createdAt,
+                    let savedUpdatedAt = saved.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = user.createdAt,
+                    let originalUpdatedAt = user.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            guard let originalCreatedAt = user.createdAt,
-                let originalUpdatedAt = user.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(saved.ACL)
+
         }
 
         let expectation2 = XCTestExpectation(description: "Update user2")
-        user.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
+        user.save(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
-            guard let saved = saved else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let saved):
+                guard let savedCreatedAt = saved.createdAt,
+                    let savedUpdatedAt = saved.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = user.createdAt,
+                    let originalUpdatedAt = user.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                XCTAssertEqual(savedCreatedAt, originalCreatedAt)
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(saved.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
-            guard let savedCreatedAt = saved.createdAt,
-                let savedUpdatedAt = saved.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = user.createdAt,
-                let originalUpdatedAt = user.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            XCTAssertEqual(savedCreatedAt, originalCreatedAt)
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(saved.ACL)
+
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
@@ -408,23 +414,24 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         let expectation1 = XCTestExpectation(description: "Signup user1")
         User.signup(username: loginResponse.username!, password: loginResponse.password!,
-                    callbackQueue: callbackQueue) { (signedUp, error) in
+                    callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
 
-            guard let signedUp = signedUp else {
-                XCTFail("Should unwrap")
-                return
+            switch result {
+
+            case .success(let signedUp):
+                XCTAssertNotNil(signedUp.createdAt)
+                XCTAssertNotNil(signedUp.updatedAt)
+                XCTAssertNotNil(signedUp.email)
+                XCTAssertNotNil(signedUp.username)
+                XCTAssertNotNil(signedUp.password)
+                XCTAssertNotNil(signedUp.objectId)
+                XCTAssertNotNil(signedUp.sessionToken)
+                XCTAssertNotNil(signedUp.customKey)
+                XCTAssertNil(signedUp.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(signedUp.createdAt)
-            XCTAssertNotNil(signedUp.updatedAt)
-            XCTAssertNotNil(signedUp.email)
-            XCTAssertNotNil(signedUp.username)
-            XCTAssertNotNil(signedUp.password)
-            XCTAssertNotNil(signedUp.objectId)
-            XCTAssertNotNil(signedUp.sessionToken)
-            XCTAssertNotNil(signedUp.customKey)
-            XCTAssertNil(signedUp.ACL)
 
         }
         wait(for: [expectation1], timeout: 10.0)
@@ -495,22 +502,25 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         let expectation1 = XCTestExpectation(description: "Login user")
         User.login(username: loginResponse.username!, password: loginResponse.password!,
-                   callbackQueue: callbackQueue) { loggedIn, error in
+                   callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let loggedIn = loggedIn else {
-                XCTFail("Should unwrap")
-                return
+
+            switch result {
+
+            case .success(let loggedIn):
+                XCTAssertNotNil(loggedIn.createdAt)
+                XCTAssertNotNil(loggedIn.updatedAt)
+                XCTAssertNotNil(loggedIn.email)
+                XCTAssertNotNil(loggedIn.username)
+                XCTAssertNotNil(loggedIn.password)
+                XCTAssertNotNil(loggedIn.objectId)
+                XCTAssertNotNil(loggedIn.sessionToken)
+                XCTAssertNotNil(loggedIn.customKey)
+                XCTAssertNil(loggedIn.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(loggedIn.createdAt)
-            XCTAssertNotNil(loggedIn.updatedAt)
-            XCTAssertNotNil(loggedIn.email)
-            XCTAssertNotNil(loggedIn.username)
-            XCTAssertNotNil(loggedIn.password)
-            XCTAssertNotNil(loggedIn.objectId)
-            XCTAssertNotNil(loggedIn.sessionToken)
-            XCTAssertNotNil(loggedIn.customKey)
-            XCTAssertNil(loggedIn.ACL)
+
         }
         wait(for: [expectation1], timeout: 10.0)
     }

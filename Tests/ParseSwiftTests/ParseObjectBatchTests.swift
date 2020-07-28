@@ -75,26 +75,27 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try [score, score2].saveAll()
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
+
+            XCTAssertEqual(saved.count, 2)
+            switch saved[0] {
+
+            case .success(let first):
+                XCTAssertNotNil(first.createdAt)
+                XCTAssertNotNil(first.updatedAt)
+                XCTAssertNil(first.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
 
-            XCTAssertNotNil(saved)
-            XCTAssertEqual(saved.count, 2)
+            switch saved[1] {
 
-            XCTAssertNil(first.1)
-            XCTAssertNotNil(first.0)
-            XCTAssertNotNil(first.0?.createdAt)
-            XCTAssertNotNil(first.0?.updatedAt)
-            XCTAssertNil(first.0?.ACL)
-
-            XCTAssertNil(second.1)
-            XCTAssertNotNil(second.0)
-            XCTAssertNotNil(second.0?.createdAt)
-            XCTAssertNotNil(second.0?.updatedAt)
-            XCTAssertNil(second.0?.ACL)
+            case .success(let second):
+                XCTAssertNotNil(second.createdAt)
+                XCTAssertNotNil(second.updatedAt)
+                XCTAssertNil(second.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
+            }
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -102,25 +103,26 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try [score, score2].saveAll(options: [.useMasterKey])
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
+            XCTAssertEqual(saved.count, 2)
+            switch saved[0] {
+
+            case .success(let first):
+                XCTAssertNotNil(first.createdAt)
+                XCTAssertNotNil(first.updatedAt)
+                XCTAssertNil(first.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
 
-            XCTAssertEqual(saved.count, 2)
+            switch saved[1] {
 
-            XCTAssertNil(first.1)
-            XCTAssertNotNil(first.0)
-            XCTAssertNotNil(first.0?.createdAt)
-            XCTAssertNotNil(first.0?.updatedAt)
-            XCTAssertNil(first.0?.ACL)
-
-            XCTAssertNil(second.1)
-            XCTAssertNotNil(second.0)
-            XCTAssertNotNil(second.0?.createdAt)
-            XCTAssertNotNil(second.0?.updatedAt)
-            XCTAssertNil(second.0?.ACL)
+            case .success(let second):
+                XCTAssertNotNil(second.createdAt)
+                XCTAssertNotNil(second.updatedAt)
+                XCTAssertNil(second.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
+            }
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -153,20 +155,23 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try [score, score2].saveAll()
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
+
+            XCTAssertEqual(saved.count, 2)
+            switch saved[0] {
+
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should have produced error")
+            case .failure(let error):
+                print("Should have an error \(error)")
             }
 
-            XCTAssertNotNil(saved)
-            XCTAssertEqual(saved.count, 2)
+            switch saved[1] {
 
-            XCTAssertNotNil(first.1)
-            XCTAssertNil(first.0)
-
-            XCTAssertNotNil(second.1)
-            XCTAssertNil(second.0)
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should have produced error")
+            case .failure(let error):
+                print("Should have an error \(error)")
+            }
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -174,26 +179,30 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try [score, score2].saveAll(options: [.useMasterKey])
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
 
             XCTAssertEqual(saved.count, 2)
+            switch saved[0] {
 
-            XCTAssertNotNil(first.1)
-            XCTAssertNil(first.0)
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should have produced error")
+            case .failure(let error):
+                print("Should have an error \(error)")
+            }
 
-            XCTAssertNotNil(second.1)
-            XCTAssertNil(second.0)
+            switch saved[1] {
+
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should have produced error")
+            case .failure(let error):
+                print("Should have an error \(error)")
+            }
 
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
 
-    func testUpdateAll() { // swiftlint:disable:this function_body_length
+    func testUpdateAll() { // swiftlint:disable:this function_body_length cyclomatic_complexity
         var score = GameScore(score: 10)
         score.objectId = "yarr"
         score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
@@ -225,45 +234,55 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         do {
             let saved = try [score, score2].saveAll()
 
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
             XCTAssertEqual(saved.count, 2)
-            XCTAssertNil(first.1)
-            guard let savedCreatedAt = first.0?.createdAt,
-                let savedUpdatedAt = first.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = score.createdAt,
-                let originalUpdatedAt = score.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(first.0?.ACL)
+            switch saved[0] {
 
-            XCTAssertNil(second.1)
-            guard let savedCreatedAt2 = second.0?.createdAt,
-                let savedUpdatedAt2 = second.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
+            case .success(let first):
+
+                guard let savedCreatedAt = first.createdAt,
+                    let savedUpdatedAt = first.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = score.createdAt,
+                    let originalUpdatedAt = score.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                 strategy, so we only compare the day*/
+                XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(first.ACL)
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            guard let originalCreatedAt2 = score2.createdAt,
-                let originalUpdatedAt2 = score2.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
+
+            switch saved[1] {
+
+            case .success(let second):
+
+                guard let savedCreatedAt2 = second.createdAt,
+                    let savedUpdatedAt2 = second.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt2 = score2.createdAt,
+                    let originalUpdatedAt2 = score2.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                 strategy, so we only compare the day*/
+                XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2,
+                                                      equalTo: originalCreatedAt2, toGranularity: .day))
+                XCTAssertGreaterThan(savedUpdatedAt2, originalUpdatedAt2)
+                XCTAssertNil(second.ACL)
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2, equalTo: originalCreatedAt2, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt2, originalUpdatedAt2)
-            XCTAssertNil(second.0?.ACL)
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -271,46 +290,53 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try [score, score2].saveAll(options: [.useMasterKey])
-
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
             XCTAssertEqual(saved.count, 2)
-            XCTAssertNil(first.1)
-            guard let savedCreatedAt = first.0?.createdAt,
-                let savedUpdatedAt = first.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = score.createdAt,
-                let originalUpdatedAt = score.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(first.0?.ACL)
 
-            XCTAssertNil(second.1)
-            guard let savedCreatedAt2 = second.0?.createdAt,
-                let savedUpdatedAt2 = second.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
+            switch saved[0] {
+
+            case .success(let first):
+                guard let savedCreatedAt = first.createdAt,
+                    let savedUpdatedAt = first.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt = score.createdAt,
+                    let originalUpdatedAt = score.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                 strategy, so we only compare the day*/
+                XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
+                XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                XCTAssertNil(first.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            guard let originalCreatedAt2 = score2.createdAt,
-                let originalUpdatedAt2 = score2.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
+
+            switch saved[1] {
+
+            case .success(let second):
+                guard let savedCreatedAt2 = second.createdAt,
+                    let savedUpdatedAt2 = second.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                guard let originalCreatedAt2 = score2.createdAt,
+                    let originalUpdatedAt2 = score2.updatedAt else {
+                        XCTFail("Should unwrap dates")
+                        return
+                }
+                /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                 strategy, so we only compare the day*/
+                XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2,
+                                                      equalTo: originalCreatedAt2, toGranularity: .day))
+                XCTAssertGreaterThan(savedUpdatedAt2, originalUpdatedAt2)
+                XCTAssertNil(second.ACL)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2, equalTo: originalCreatedAt2, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt2, originalUpdatedAt2)
-            XCTAssertNil(second.0?.ACL)
+
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -344,18 +370,22 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
         do {
             let saved = try [score, score2].saveAll()
-
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
             XCTAssertEqual(saved.count, 2)
-            XCTAssertNil(first.0)
-            XCTAssertNotNil(first.1)
+            switch saved[0] {
 
-            XCTAssertNil(second.0)
-            XCTAssertNotNil(second.1)
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should throw error instead of success")
+            case .failure(_): // swiftlint:disable:this empty_enum_arguments
+                print("Should throw error")
+            }
+
+            switch saved[1] {
+
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should throw error instead of success")
+            case .failure(_): // swiftlint:disable:this empty_enum_arguments
+                print("Should throw error")
+            }
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -364,17 +394,22 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         do {
             let saved = try [score, score2].saveAll(options: [.useMasterKey])
 
-            guard let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
             XCTAssertEqual(saved.count, 2)
-            XCTAssertNil(first.0)
-            XCTAssertNotNil(first.1)
+            switch saved[0] {
 
-            XCTAssertNil(second.0)
-            XCTAssertNotNil(second.1)
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should throw error instead of success")
+            case .failure(_): // swiftlint:disable:this empty_enum_arguments
+                print("Should throw error")
+            }
+
+            switch saved[1] {
+
+            case .success(_): // swiftlint:disable:this empty_enum_arguments
+                XCTFail("Should throw error instead of success")
+            case .failure(_): // swiftlint:disable:this empty_enum_arguments
+                print("Should throw error")
+            }
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -386,34 +421,41 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
-        scores.saveAll(options: [], callbackQueue: callbackQueue) { (saved, error) in
+        scores.saveAll(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let saved = saved,
-                let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
+            
+            switch result {
+                
+            case .success(let saved):
+                guard let first = saved.first,
+                    let second = saved.last else {
+                    XCTFail("Should unwrap")
+                    return
+                }
+                XCTAssertNil(error)
+                XCTAssertNotNil(saved)
+                XCTAssertEqual(scores.count, 2)
+
+                XCTAssertNil(first.1)
+                XCTAssertNotNil(first.0)
+                XCTAssertNotNil(first.0?.createdAt)
+                XCTAssertNotNil(first.0?.updatedAt)
+                XCTAssertNil(first.0?.ACL)
+
+                XCTAssertNil(second.1)
+                XCTAssertNotNil(second.0)
+                XCTAssertNotNil(second.0?.createdAt)
+                XCTAssertNotNil(second.0?.updatedAt)
+                XCTAssertNil(second.0?.ACL)
+            case .failure(_):
+                <#code#>
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(saved)
-            XCTAssertEqual(scores.count, 2)
-
-            XCTAssertNil(first.1)
-            XCTAssertNotNil(first.0)
-            XCTAssertNotNil(first.0?.createdAt)
-            XCTAssertNotNil(first.0?.updatedAt)
-            XCTAssertNil(first.0?.ACL)
-
-            XCTAssertNil(second.1)
-            XCTAssertNotNil(second.0)
-            XCTAssertNotNil(second.0?.createdAt)
-            XCTAssertNotNil(second.0?.updatedAt)
-            XCTAssertNil(second.0?.ACL)
+            
 
         }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
+        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
 
             guard let saved = saved,
@@ -509,7 +551,7 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
-        scores.saveAll(options: [], callbackQueue: callbackQueue) { (saved, error) in
+        scores.saveAll(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
             guard let saved = saved,
                 let first = saved.first,
@@ -556,7 +598,7 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
-        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
+        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
             guard let saved = saved,
                 let first = saved.first,
