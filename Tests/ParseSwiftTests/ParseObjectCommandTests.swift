@@ -110,7 +110,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
             switch result {
             case .success(let fetched):
-                XCTAssertNotNil(fetched)
                 XCTAssertNotNil(fetched.createdAt)
                 XCTAssertNotNil(fetched.updatedAt)
                 XCTAssertNil(fetched.ACL)
@@ -125,7 +124,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             expectation2.fulfill()
             switch result {
             case .success(let fetched):
-                XCTAssertNotNil(fetched)
                 XCTAssertNotNil(fetched.createdAt)
                 XCTAssertNotNil(fetched.updatedAt)
                 XCTAssertNil(fetched.ACL)
@@ -228,7 +226,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
         do {
             let saved = try score.save()
-            XCTAssertNotNil(saved)
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
@@ -238,7 +235,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         do {
             let saved = try score.save(options: [.useMasterKey])
-            XCTAssertNotNil(saved)
             XCTAssertNotNil(saved.createdAt)
             XCTAssertNotNil(saved.updatedAt)
             XCTAssertNil(saved.ACL)
@@ -267,7 +263,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
         do {
             let saved = try score.save()
-            XCTAssertNotNil(saved)
             guard let savedCreatedAt = saved.createdAt,
                 let savedUpdatedAt = saved.updatedAt else {
                     XCTFail("Should unwrap dates")
@@ -287,7 +282,6 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
 
         do {
             let saved = try score.save(options: [.useMasterKey])
-            XCTAssertNotNil(saved)
             guard let savedCreatedAt = saved.createdAt,
                 let savedUpdatedAt = saved.updatedAt else {
                     XCTFail("Should unwrap dates")

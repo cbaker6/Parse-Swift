@@ -238,7 +238,6 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
         do {
             let saved = try user.save()
-            XCTAssertNotNil(saved)
             guard let savedCreatedAt = saved.createdAt,
                 let savedUpdatedAt = saved.updatedAt else {
                     XCTFail("Should unwrap dates")
@@ -258,7 +257,6 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
 
         do {
             let saved = try user.save(options: [.useMasterKey])
-            XCTAssertNotNil(saved)
             guard let savedCreatedAt = saved.createdAt,
                 let savedUpdatedAt = saved.updatedAt else {
                     XCTFail("Should unwrap dates")
