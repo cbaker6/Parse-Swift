@@ -82,7 +82,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             }
         }
         do {
-            let fetched = try score.fetch()
+            let fetched = try score.fetch(options: [], callbackQueue: .main)
             XCTAssertNotNil(fetched)
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)
@@ -92,7 +92,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         do {
-            let fetched = try score.fetch(options: [.useMasterKey])
+            let fetched = try score.fetch(options: [.useMasterKey], callbackQueue: .global(qos: .background))
             XCTAssertNotNil(fetched)
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)
@@ -102,10 +102,10 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
     }
 
-    func fetchAsync(score: GameScore, scoreOnServer: GameScore) {
+    func fetchAsync(score: GameScore, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Fetch object1")
-        score.fetch(options: []) { (fetched, error) in
+        score.fetch(options: [], callbackQueue: callbackQueue) { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -119,7 +119,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch object2")
-        score.fetch(options: [.useMasterKey]) { (fetched, error) in
+        score.fetch(options: [.useMasterKey], callbackQueue: callbackQueue) { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -154,8 +154,29 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.fetchAsync(score: score, scoreOnServer: scoreOnServer)
+            self.fetchAsync(score: score, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testFetchAsyncMainQueue() {
+        var score = GameScore(score: 10)
+        let objectId = "yarr"
+        score.objectId = objectId
+
+        var scoreOnServer = score
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        self.fetchAsync(score: score, callbackQueue: .main)
     }
 
     func testSaveCommand() {
@@ -283,11 +304,11 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
     }
 
-    func saveAsync(score: GameScore) {
+    func saveAsync(score: GameScore, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
-        score.save(options: []) { (saved, error) in
+        score.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -301,7 +322,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        score.save(options: [.useMasterKey]) { (saved, error) in
+        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -335,15 +356,36 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.saveAsync(score: score)
+            self.saveAsync(score: score, callbackQueue: .global(qos: .background))
         }
     }
 
-    func updateAsync(score: GameScore) {
+    func testSaveAsyncMainQueue() {
+        let score = GameScore(score: 10)
+
+        var scoreOnServer = score
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        self.saveAsync(score: score, callbackQueue: .main)
+    }
+
+    func updateAsync(score: GameScore, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
-        score.save(options: []) { (saved, error) in
+        score.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -367,7 +409,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
-        score.save(options: [.useMasterKey]) { (saved, error) in
+        score.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -412,7 +454,28 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.updateAsync(score: score)
+            self.updateAsync(score: score, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testUpdateAsyncMainQueue() {
+        var score = GameScore(score: 10)
+        score.objectId = "yarr"
+        score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.ACL = nil
+
+        var scoreOnServer = score
+        scoreOnServer.updatedAt = Date()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(scoreOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        self.updateAsync(score: score, callbackQueue: .main)
     }
 } // swiftlint:disable:this file_length

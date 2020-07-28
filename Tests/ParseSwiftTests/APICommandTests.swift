@@ -42,7 +42,7 @@ class APICommandTests: XCTestCase {
             let returnedObject =
                 try API.Command<NoBody, String>(method: .GET, path: .login, params: nil, mapper: { (data) -> String in
                     return try JSONDecoder().decode(String.self, from: data)
-            }).execute(options: [])
+                }).execute(options: [])
             XCTAssertEqual(originalObject, returnedObject)
 
         } catch {

@@ -32,30 +32,36 @@ public extension UserType {
     }
 
     static func login(username: String,
-                      password: String) throws -> Self {
-        return try loginCommand(username: username, password: password).execute(options: [])
+                      password: String, callbackQueue: DispatchQueue = .main) throws -> Self {
+        return try loginCommand(username: username, password: password)
+            .execute(options: [])
     }
 
     static func login(username: String,
-                      password: String, completion: @escaping (Self?, ParseError?) -> Void) {
-        return loginCommand(username: username, password: password).executeAsync(options: [], completion: completion)
+                      password: String, callbackQueue: DispatchQueue = .main,
+                      completion: @escaping (Self?, ParseError?) -> Void) {
+        return loginCommand(username: username, password: password)
+            .executeAsync(options: [], callbackQueue: callbackQueue, completion: completion)
     }
 
     static func signup(username: String,
-                       password: String) throws -> Self {
-        return try signupCommand(username: username, password: password).execute(options: [])
+                       password: String, callbackQueue: DispatchQueue = .main) throws -> Self {
+        return try signupCommand(username: username, password: password)
+            .execute(options: [])
     }
 
     static func signup(username: String,
-                       password: String, completion: @escaping (Self?, ParseError?) -> Void) {
-        return signupCommand(username: username, password: password).executeAsync(options: [], completion: completion)
+                       password: String, callbackQueue: DispatchQueue = .main,
+                       completion: @escaping (Self?, ParseError?) -> Void) {
+        return signupCommand(username: username, password: password)
+            .executeAsync(options: [], callbackQueue: callbackQueue, completion: completion)
     }
 
-    static func logout() throws {
+    static func logout(callbackQueue: DispatchQueue = .main) throws {
         _ = try logoutCommand().execute(options: [])
     }
 
-    func signup() throws -> Self {
+    func signup(callbackQueue: DispatchQueue = .main) throws -> Self {
         return try signupCommand().execute(options: [])
     }
 }

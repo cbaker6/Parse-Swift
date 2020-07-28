@@ -9,20 +9,20 @@
 import Foundation
 public protocol Querying {
     associatedtype ResultType
-    func find(options: API.Options) throws -> [ResultType]
-    func first(options: API.Options) throws -> ResultType?
-    func count(options: API.Options) throws -> Int
+    func find(options: API.Options, callbackQueue: DispatchQueue) throws -> [ResultType]
+    func first(options: API.Options, callbackQueue: DispatchQueue) throws -> ResultType?
+    func count(options: API.Options, callbackQueue: DispatchQueue) throws -> Int
 }
 
 extension Querying {
     func find() throws -> [ResultType] {
-        return try find(options: [])
+        return try find(options: [], callbackQueue: .main)
     }
     func first() throws -> ResultType? {
-        return try first(options: [])
+        return try first(options: [], callbackQueue: .main)
     }
     func count() throws -> Int {
-        return try count(options: [])
+        return try count(options: [], callbackQueue: .main)
     }
 }
 
@@ -198,20 +198,22 @@ extension Query: Querying {
 
     public typealias ResultType = T
 
-    public func find(options: API.Options) throws -> [ResultType] {
+    public func find(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> [ResultType] {
         return try findCommand().execute(options: options)
     }
 
-    public func find(options: API.Options = [], completion: @escaping ([ResultType]?, Error?) -> Void) {
-        findCommand().executeAsync(options: options, completion: completion)
+    public func find(options: API.Options = [],
+                     callbackQueue: DispatchQueue = .main, completion: @escaping ([ResultType]?, Error?) -> Void) {
+        findCommand().executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
     }
 
-    public func first(options: API.Options) throws -> ResultType? {
+    public func first(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> ResultType? {
         return try firstCommand().execute(options: options)
     }
 
-    public func first(options: API.Options = [], completion: @escaping (ResultType?, Error?) -> Void) {
-        firstCommand().executeAsync(options: options) { result, error in
+    public func first(options: API.Options = [],
+                      callbackQueue: DispatchQueue = .main, completion: @escaping (ResultType?, Error?) -> Void) {
+        firstCommand().executeAsync(options: options, callbackQueue: callbackQueue) { result, error in
             guard let result = result else {
                 completion(nil, error)
                 return
@@ -220,12 +222,13 @@ extension Query: Querying {
         }
     }
 
-    public func count(options: API.Options) throws -> Int {
+    public func count(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> Int {
         return try countCommand().execute(options: options)
     }
 
-    public func count(options: API.Options = [], completion: @escaping (Int?, Error?) -> Void) {
-        countCommand().executeAsync(options: options, completion: completion)
+    public func count(options: API.Options = [], callbackQueue: DispatchQueue = .main,
+                      completion: @escaping (Int?, Error?) -> Void) {
+        countCommand().executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
     }
 
 }

@@ -381,11 +381,12 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func saveAllAsync(scores: [GameScore]) { // swiftlint:disable:this function_body_length
+    func saveAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length
+                      callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
-        scores.saveAll(options: []) { (saved, error) in
+        scores.saveAll(options: [], callbackQueue: callbackQueue) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved,
                 let first = saved.first,
@@ -412,7 +413,7 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Save object2")
-        scores.saveAll(options: [.useMasterKey]) { (saved, error) in
+        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
             expectation2.fulfill()
 
             guard let saved = saved,
@@ -468,17 +469,47 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.saveAllAsync(scores: [score, score2])
+            self.saveAllAsync(scores: [score, score2], callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testSaveAllAsyncMainQueue() {
+        let score = GameScore(score: 10)
+        let score2 = GameScore(score: 20)
+
+        var scoreOnServer = score
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        var scoreOnServer2 = score2
+        scoreOnServer2.objectId = "yolo"
+        scoreOnServer2.createdAt = Date()
+        scoreOnServer2.updatedAt = Date()
+        scoreOnServer2.ACL = nil
+
+        let response = [BatchResponseItem<GameScore>(success: scoreOnServer, error: nil),
+        BatchResponseItem<GameScore>(success: scoreOnServer2, error: nil)]
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(response)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        self.saveAllAsync(scores: [score, score2], callbackQueue: .main)
     }
 
     /* Note, the current batchCommand for updateAll returns the original object that was updated as
     opposed to the latestUpdated. The objective c one just returns true/false */
-    func updateAllAsync(scores: [GameScore]) { // swiftlint:disable:this function_body_length
+    func updateAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length
+                        callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
-        scores.saveAll(options: []) { (saved, error) in
+        scores.saveAll(options: [], callbackQueue: callbackQueue) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved,
                 let first = saved.first,
@@ -525,7 +556,7 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
-        scores.saveAll(options: [.useMasterKey]) { (saved, error) in
+        scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved,
                 let first = saved.first,
@@ -604,7 +635,39 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.updateAllAsync(scores: [score, score2])
+            self.updateAllAsync(scores: [score, score2], callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testUpdateAllAsyncMainQueue() {
+        var score = GameScore(score: 10)
+        score.objectId = "yarr"
+        score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score.ACL = nil
+
+        var score2 = GameScore(score: 20)
+        score2.objectId = "yolo"
+        score2.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score2.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        score2.ACL = nil
+
+        var scoreOnServer = score
+        scoreOnServer.updatedAt = Date()
+        var scoreOnServer2 = score2
+        scoreOnServer2.updatedAt = Date()
+
+        let response = [BatchResponseItem<GameScore>(success: scoreOnServer, error: nil),
+                        BatchResponseItem<GameScore>(success: scoreOnServer2, error: nil)]
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(response)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        self.updateAllAsync(scores: [score, score2], callbackQueue: .main)
     }
 } // swiftlint:disable:this file_length

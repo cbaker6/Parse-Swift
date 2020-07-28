@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 @testable import ParseSwift
 
-class ParseQueryTests: XCTestCase {
+class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
 
     struct GameScore: ParseSwift.ObjectType {
         //: Those are required for Object
@@ -86,10 +86,10 @@ class ParseQueryTests: XCTestCase {
 
     }
 
-    func findAsync(scoreOnServer: GameScore) {
+    func findAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.find { found, error in
+        query.find(options: [], callbackQueue: callbackQueue) { found, error in
             expectation.fulfill()
             guard let score = found?.first else {
                 XCTFail("Should unwrap score count")
@@ -119,8 +119,27 @@ class ParseQueryTests: XCTestCase {
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            countAsync(scoreOnServer: scoreOnServer)
+            findAsync(scoreOnServer: scoreOnServer, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testFindAsyncMainQueue() {
+        var scoreOnServer = GameScore(score: 10)
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        findAsync(scoreOnServer: scoreOnServer, callbackQueue: .main)
     }
 
     func testFirst() {
@@ -155,10 +174,10 @@ class ParseQueryTests: XCTestCase {
 
     }
 
-    func firstAsync(scoreOnServer: GameScore) {
+    func firstAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.first { found, error in
+        query.first(options: [], callbackQueue: callbackQueue) { found, error in
             expectation.fulfill()
             guard let score = found else {
                 XCTFail("Should unwrap score count")
@@ -188,8 +207,27 @@ class ParseQueryTests: XCTestCase {
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            countAsync(scoreOnServer: scoreOnServer)
+            firstAsync(scoreOnServer: scoreOnServer, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testFirstAsyncMainQueue() {
+        var scoreOnServer = GameScore(score: 10)
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        firstAsync(scoreOnServer: scoreOnServer, callbackQueue: .main)
     }
 
     func testCount() {
@@ -221,11 +259,11 @@ class ParseQueryTests: XCTestCase {
 
     }
 
-    func countAsync(scoreOnServer: GameScore) {
+    func countAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
 
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.count { count, error in
+        query.count(options: [], callbackQueue: callbackQueue) { count, error in
             expectation.fulfill()
             guard let scoreCount = count else {
                 XCTFail("Should unwrap score count")
@@ -255,7 +293,26 @@ class ParseQueryTests: XCTestCase {
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            countAsync(scoreOnServer: scoreOnServer)
+            countAsync(scoreOnServer: scoreOnServer, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testCountAsyncMainQueue() {
+        var scoreOnServer = GameScore(score: 10)
+        scoreOnServer.objectId = "yarr"
+        scoreOnServer.createdAt = Date()
+        scoreOnServer.updatedAt = Date()
+        scoreOnServer.ACL = nil
+
+        let results = FindResult<GameScore>(results: [scoreOnServer], count: 1)
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try scoreOnServer.getEncoderWithoutSkippingKeys().encode(results)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        countAsync(scoreOnServer: scoreOnServer, callbackQueue: .main)
     }
 }

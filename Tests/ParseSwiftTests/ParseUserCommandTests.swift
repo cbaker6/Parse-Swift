@@ -133,7 +133,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func fetchAsync(user: User, userOnServer: User) {
 
         let expectation1 = XCTestExpectation(description: "Fetch user1")
-        user.fetch(options: []) { (fetched, error) in
+        user.fetch(options: [], callbackQueue: .global(qos: .background)) { (fetched, error) in
             expectation1.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -147,7 +147,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Fetch user2")
-        user.fetch(options: [.useMasterKey]) { (fetched, error) in
+        user.fetch(options: [.useMasterKey], callbackQueue: .global(qos: .background)) { (fetched, error) in
             expectation2.fulfill()
             guard let fetched = fetched else {
                 XCTFail("Should unwrap")
@@ -274,10 +274,10 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func updateAsync(user: User, userOnServer: User) {
+    func updateAsync(user: User, userOnServer: User, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Update user1")
-        user.save(options: []) { (saved, error) in
+        user.save(options: [], callbackQueue: callbackQueue) { (saved, error) in
             expectation1.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -302,7 +302,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         let expectation2 = XCTestExpectation(description: "Update user2")
-        user.save(options: [.useMasterKey]) { (saved, error) in
+        user.save(options: [.useMasterKey], callbackQueue: callbackQueue) { (saved, error) in
             expectation2.fulfill()
             guard let saved = saved else {
                 XCTFail("Should unwrap")
@@ -348,8 +348,31 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.updateAsync(user: user, userOnServer: userOnServer)
+            self.updateAsync(user: user, userOnServer: userOnServer, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testUpdateAsyncMainQueue() {
+        var user = User()
+        let objectId = "yarr"
+        user.objectId = objectId
+        user.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        user.updatedAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
+        user.ACL = nil
+
+        var userOnServer = user
+        userOnServer.updatedAt = Date()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try userOnServer.getEncoderWithoutSkippingKeys().encode(userOnServer)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        self.updateAsync(user: user, userOnServer: userOnServer, callbackQueue: .main)
     }
 
     func testUserSignUp() {
@@ -381,10 +404,11 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func serSignUpAsync(loginResponse: LoginSignupResponse) {
+    func serSignUpAsync(loginResponse: LoginSignupResponse, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Signup user1")
-        User.signup(username: loginResponse.username!, password: loginResponse.password!) { (signedUp, error) in
+        User.signup(username: loginResponse.username!, password: loginResponse.password!,
+                    callbackQueue: callbackQueue) { (signedUp, error) in
             expectation1.fulfill()
 
             guard let signedUp = signedUp else {
@@ -419,8 +443,23 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.serSignUpAsync(loginResponse: loginResponse)
+            self.serSignUpAsync(loginResponse: loginResponse, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testSignUpAsyncMainQueue() {
+        let loginResponse = LoginSignupResponse()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try loginResponse.getEncoderWithoutSkippingKeys().encode(loginResponse)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        self.serSignUpAsync(loginResponse: loginResponse, callbackQueue: .main)
     }
 
     func testUserLogin() {
@@ -452,10 +491,11 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func userLoginAsync(loginResponse: LoginSignupResponse) {
+    func userLoginAsync(loginResponse: LoginSignupResponse, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Login user")
-        User.login(username: loginResponse.username!, password: loginResponse.password!) { loggedIn, error in
+        User.login(username: loginResponse.username!, password: loginResponse.password!,
+                   callbackQueue: callbackQueue) { loggedIn, error in
             expectation1.fulfill()
             guard let loggedIn = loggedIn else {
                 XCTFail("Should unwrap")
@@ -488,7 +528,22 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.userLoginAsync(loginResponse: loginResponse)
+            self.userLoginAsync(loginResponse: loginResponse, callbackQueue: .global(qos: .background))
         }
+    }
+
+    func testLoginAsyncMainQueue() {
+        let loginResponse = LoginSignupResponse()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try loginResponse.getEncoderWithoutSkippingKeys().encode(loginResponse)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        self.userLoginAsync(loginResponse: loginResponse, callbackQueue: .main)
     }
 } // swiftlint:disable:this file_length

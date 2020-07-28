@@ -30,7 +30,7 @@ public struct Pointer<T: ObjectType>: Fetching, Codable {
 }
 
 extension Pointer {
-    public func fetch(options: API.Options = []) throws -> T {
+    public func fetch(options: API.Options = [], callbackQueue: DispatchQueue = .main) throws -> T {
         let path = API.Endpoint.object(className: className, objectId: objectId)
         return try API.Command<NoBody, T>(method: .GET,
                                       path: path) { (data) -> T in

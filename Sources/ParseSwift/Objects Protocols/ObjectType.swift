@@ -12,25 +12,25 @@ public struct NoBody: Codable {}
 
 public protocol Saving: Codable {
     associatedtype SavingType
-    func save(options: API.Options) throws -> SavingType
+    func save(options: API.Options, callbackQueue: DispatchQueue) throws -> SavingType
     func save() throws -> SavingType
 }
 
 extension Saving {
     public func save() throws -> SavingType {
-        return try save(options: [])
+        return try save(options: [], callbackQueue: .main)
     }
 }
 
 public protocol Fetching: Codable {
     associatedtype FetchingType
-    func fetch(options: API.Options) throws -> FetchingType
+    func fetch(options: API.Options, callbackQueue: DispatchQueue) throws -> FetchingType
     func fetch() throws -> FetchingType
 }
 
 extension Fetching {
     public func fetch() throws -> FetchingType {
-        return try fetch(options: [])
+        return try fetch(options: [], callbackQueue: .main)
     }
 }
 
@@ -178,21 +178,23 @@ func getDecoder() -> JSONDecoder {
 }
 
 public extension ObjectType {
-    func save(options: API.Options) throws -> Self {
+    func save(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> Self {
         return try saveCommand().execute(options: options)
     }
 
-    func save(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
-        saveCommand().executeAsync(options: options, completion: completion)
+    func save(options: API.Options, callbackQueue: DispatchQueue = .main,
+              completion: @escaping (Self?, ParseError?) -> Void) {
+        saveCommand().executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
     }
 
-    func fetch(options: API.Options) throws -> Self {
+    func fetch(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> Self {
         return try fetchCommand().execute(options: options)
     }
 
-    func fetch(options: API.Options, completion: @escaping (Self?, ParseError?) -> Void) {
+    func fetch(options: API.Options, callbackQueue: DispatchQueue = .main,
+               completion: @escaping (Self?, ParseError?) -> Void) {
         do {
-            try fetchCommand().executeAsync(options: options, completion: completion)
+            try fetchCommand().executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
         } catch let error as ParseError {
             completion(nil, error)
         } catch {
