@@ -64,17 +64,20 @@ public extension UserType {
     }
 
     static func logout() throws {
-        _ = try logoutCommand().execute(options: [])
+        _ = try logoutCommand()
+            .execute(options: [])
     }
 
     static func logout(callbackQueue: DispatchQueue = .main, completion: @escaping (ParseError?) -> Void) {
-        logoutCommand().executeAsync(options: [], callbackQueue: callbackQueue) { _, error in
+        logoutCommand()
+            .executeAsync(options: [], callbackQueue: callbackQueue) { _, error in
             completion(error)
         }
     }
 
     func signup() throws -> Self {
-        return try signupCommand().execute(options: [])
+        return try signupCommand()
+            .execute(options: [])
     }
 }
 

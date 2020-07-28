@@ -33,6 +33,6 @@ extension Sequence where Element: ObjectType {
         let commands = map { $0.saveCommand() }
         API.Command<Self.Element, Self.Element>
                 .batch(commands: commands)
-            .executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
+                .executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
     }
 }
