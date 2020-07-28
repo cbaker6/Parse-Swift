@@ -9,20 +9,20 @@
 import Foundation
 public protocol Querying {
     associatedtype ResultType
-    func find(options: API.Options, callbackQueue: DispatchQueue) throws -> [ResultType]
-    func first(options: API.Options, callbackQueue: DispatchQueue) throws -> ResultType?
-    func count(options: API.Options, callbackQueue: DispatchQueue) throws -> Int
+    func find(options: API.Options) throws -> [ResultType]
+    func first(options: API.Options) throws -> ResultType?
+    func count(options: API.Options) throws -> Int
 }
 
 extension Querying {
     func find() throws -> [ResultType] {
-        return try find(options: [], callbackQueue: .main)
+        return try find(options: [])
     }
     func first() throws -> ResultType? {
-        return try first(options: [], callbackQueue: .main)
+        return try first(options: [])
     }
     func count() throws -> Int {
-        return try count(options: [], callbackQueue: .main)
+        return try count(options: [])
     }
 }
 
@@ -198,7 +198,7 @@ extension Query: Querying {
 
     public typealias ResultType = T
 
-    public func find(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> [ResultType] {
+    public func find(options: API.Options) throws -> [ResultType] {
         return try findCommand().execute(options: options)
     }
 
@@ -207,7 +207,7 @@ extension Query: Querying {
         findCommand().executeAsync(options: options, callbackQueue: callbackQueue, completion: completion)
     }
 
-    public func first(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> ResultType? {
+    public func first(options: API.Options) throws -> ResultType? {
         return try firstCommand().execute(options: options)
     }
 
@@ -222,7 +222,7 @@ extension Query: Querying {
         }
     }
 
-    public func count(options: API.Options, callbackQueue: DispatchQueue = .main) throws -> Int {
+    public func count(options: API.Options) throws -> Int {
         return try countCommand().execute(options: options)
     }
 

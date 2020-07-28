@@ -21,8 +21,7 @@ public extension ObjectType {
 }
 
 extension Sequence where Element: ObjectType {
-    public func saveAll(options: API.Options = [],
-                        callbackQueue: DispatchQueue = .main) throws -> [(Self.Element?, ParseError?)] {
+    public func saveAll(options: API.Options = []) throws -> [(Self.Element?, ParseError?)] {
         let commands = map { $0.saveCommand() }
         return try API.Command<Self.Element, Self.Element>
                 .batch(commands: commands)

@@ -82,7 +82,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
             }
         }
         do {
-            let fetched = try score.fetch(options: [], callbackQueue: .main)
+            let fetched = try score.fetch(options: [])
             XCTAssertNotNil(fetched)
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)
@@ -92,7 +92,7 @@ class ParseObjectCommandTests: XCTestCase { // swiftlint:disable:this type_body_
         }
 
         do {
-            let fetched = try score.fetch(options: [.useMasterKey], callbackQueue: .global(qos: .background))
+            let fetched = try score.fetch(options: [.useMasterKey])
             XCTAssertNotNil(fetched)
             XCTAssertNotNil(fetched.createdAt)
             XCTAssertNotNil(fetched.updatedAt)

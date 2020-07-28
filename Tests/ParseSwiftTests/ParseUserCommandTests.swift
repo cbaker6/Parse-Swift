@@ -404,7 +404,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func serSignUpAsync(loginResponse: LoginSignupResponse, callbackQueue: DispatchQueue) {
+    func signUpAsync(loginResponse: LoginSignupResponse, callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Signup user1")
         User.signup(username: loginResponse.username!, password: loginResponse.password!,
@@ -443,7 +443,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         DispatchQueue.concurrentPerform(iterations: 100) {_ in
-            self.serSignUpAsync(loginResponse: loginResponse, callbackQueue: .global(qos: .background))
+            self.signUpAsync(loginResponse: loginResponse, callbackQueue: .global(qos: .background))
         }
     }
 
@@ -459,7 +459,7 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
             }
         }
 
-        self.serSignUpAsync(loginResponse: loginResponse, callbackQueue: .main)
+        self.signUpAsync(loginResponse: loginResponse, callbackQueue: .main)
     }
 
     func testUserLogin() {
@@ -545,5 +545,65 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
 
         self.userLoginAsync(loginResponse: loginResponse, callbackQueue: .main)
+    }
+
+    func testUserLogout() {
+        let loginResponse = LoginSignupResponse()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try loginResponse.getEncoderWithoutSkippingKeys().encode(loginResponse)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+        do {
+            try User.logout()
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func logoutAsync(callbackQueue: DispatchQueue) {
+
+        let expectation1 = XCTestExpectation(description: "Logout user1")
+        User.logout(callbackQueue: callbackQueue) { error in
+            expectation1.fulfill()
+            XCTAssertNil(error)
+        }
+        wait(for: [expectation1], timeout: 10.0)
+    }
+
+    func testThreadSafeLogoutAsync() {
+        let loginResponse = LoginSignupResponse()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try loginResponse.getEncoderWithoutSkippingKeys().encode(loginResponse)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        DispatchQueue.concurrentPerform(iterations: 100) {_ in
+            self.logoutAsync(callbackQueue: .global(qos: .background))
+        }
+    }
+
+    func testLogoutAsyncMainQueue() {
+        let loginResponse = LoginSignupResponse()
+
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try loginResponse.getEncoderWithoutSkippingKeys().encode(loginResponse)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                return nil
+            }
+        }
+
+        self.logoutAsync(callbackQueue: .main)
     }
 } // swiftlint:disable:this file_length
