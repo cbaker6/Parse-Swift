@@ -416,41 +416,49 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func saveAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length
+    func saveAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length cyclomatic_complexity
                       callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Save object1")
 
         scores.saveAll(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            
+
             switch result {
-                
+
             case .success(let saved):
-                guard let first = saved.first,
-                    let second = saved.last else {
+                XCTAssertEqual(saved.count, 2)
+                guard let firstObject = saved.first,
+                    let secondObject = saved.last else {
                     XCTFail("Should unwrap")
                     return
                 }
-                XCTAssertNil(error)
-                XCTAssertNotNil(saved)
-                XCTAssertEqual(scores.count, 2)
 
-                XCTAssertNil(first.1)
-                XCTAssertNotNil(first.0)
-                XCTAssertNotNil(first.0?.createdAt)
-                XCTAssertNotNil(first.0?.updatedAt)
-                XCTAssertNil(first.0?.ACL)
+                switch firstObject {
 
-                XCTAssertNil(second.1)
-                XCTAssertNotNil(second.0)
-                XCTAssertNotNil(second.0?.createdAt)
-                XCTAssertNotNil(second.0?.updatedAt)
-                XCTAssertNil(second.0?.ACL)
-            case .failure(_):
-                <#code#>
+                case .success(let first):
+                    XCTAssertNotNil(first.createdAt)
+                    XCTAssertNotNil(first.updatedAt)
+                    XCTAssertNil(first.ACL)
+
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+                switch secondObject {
+
+                case .success(let second):
+                    XCTAssertNotNil(second.createdAt)
+                    XCTAssertNotNil(second.updatedAt)
+                    XCTAssertNil(second.ACL)
+
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            
 
         }
 
@@ -458,27 +466,41 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
 
-            guard let saved = saved,
-                let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
+            switch result {
+
+            case .success(let saved):
+                XCTAssertEqual(saved.count, 2)
+
+                guard let firstObject = saved.first,
+                    let secondObject = saved.last else {
+                    XCTFail("Should unwrap")
+                    return
+                }
+
+                switch firstObject {
+
+                case .success(let first):
+                    XCTAssertNotNil(first.createdAt)
+                    XCTAssertNotNil(first.updatedAt)
+                    XCTAssertNil(first.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+                switch secondObject {
+
+                case .success(let second):
+                    XCTAssertNotNil(second.createdAt)
+                    XCTAssertNotNil(second.updatedAt)
+                    XCTAssertNil(second.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertNil(error)
-            XCTAssertNotNil(saved)
-            XCTAssertEqual(scores.count, 2)
 
-            XCTAssertNil(first.1)
-            XCTAssertNotNil(first.0)
-            XCTAssertNotNil(first.0?.createdAt)
-            XCTAssertNotNil(first.0?.updatedAt)
-            XCTAssertNil(first.0?.ACL)
-
-            XCTAssertNil(second.1)
-            XCTAssertNotNil(second.0)
-            XCTAssertNotNil(second.0?.createdAt)
-            XCTAssertNotNil(second.0?.updatedAt)
-            XCTAssertNil(second.0?.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }
@@ -546,102 +568,139 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
 
     /* Note, the current batchCommand for updateAll returns the original object that was updated as
     opposed to the latestUpdated. The objective c one just returns true/false */
-    func updateAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length
+    func updateAllAsync(scores: [GameScore], // swiftlint:disable:this function_body_length cyclomatic_complexity
                         callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Update object1")
 
         scores.saveAll(options: [], callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            guard let saved = saved,
-                let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
-            XCTAssertNil(first.1)
-            guard let savedCreatedAt = first.0?.createdAt,
-                let savedUpdatedAt = first.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = scores.first?.createdAt,
-                let originalUpdatedAt = scores.first?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
-            XCTAssertNil(first.0?.ACL)
 
-            XCTAssertNil(second.1)
-            guard let savedCreatedAt2 = second.0?.createdAt,
-                let savedUpdatedAt2 = second.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
+            switch result {
+
+            case .success(let saved):
+                guard let firstObject = saved.first,
+                    let secondObject = saved.last else {
+                    XCTFail("Should unwrap")
                     return
+                }
+
+                switch firstObject {
+
+                case .success(let first):
+                    guard let savedCreatedAt = first.createdAt,
+                        let savedUpdatedAt = first.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    guard let originalCreatedAt = scores.first?.createdAt,
+                        let originalUpdatedAt = scores.first?.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                     strategy, so we only compare the day*/
+                    XCTAssertTrue(Calendar.current.isDate(savedCreatedAt,
+                                                          equalTo: originalCreatedAt, toGranularity: .day))
+                    XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                    XCTAssertNil(first.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+                switch secondObject {
+
+                case .success(let second):
+                    guard let savedCreatedAt2 = second.createdAt,
+                        let savedUpdatedAt2 = second.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    guard let originalCreatedAt2 = scores.last?.createdAt,
+                        let originalUpdatedAt2 = scores.last?.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                     strategy, so we only compare the day*/
+                    XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2,
+                                                          equalTo: originalCreatedAt2, toGranularity: .day))
+                    XCTAssertGreaterThan(savedUpdatedAt2,
+                                         originalUpdatedAt2)
+                    XCTAssertNil(second.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            guard let originalCreatedAt2 = scores.last?.createdAt,
-                let originalUpdatedAt2 = scores.last?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2, equalTo: originalCreatedAt2, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt2,
-                                 originalUpdatedAt2)
-            XCTAssertNil(second.0?.ACL)
+
         }
 
         let expectation2 = XCTestExpectation(description: "Update object2")
         scores.saveAll(options: [.useMasterKey], callbackQueue: callbackQueue) { result in
             expectation2.fulfill()
-            guard let saved = saved,
-                let first = saved.first,
-                let second = saved.last else {
-                XCTFail("Should unwrap")
-                return
-            }
-            XCTAssertNotNil(saved)
-            XCTAssertNil(error)
-            XCTAssertNil(first.1)
-            guard let savedCreatedAt = first.0?.createdAt,
-                let savedUpdatedAt = first.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            guard let originalCreatedAt = scores.first?.createdAt,
-                let originalUpdatedAt = scores.first?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-            strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt, equalTo: originalCreatedAt, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt) //When updated should switch to XCTAssertGreaterThan
-            XCTAssertNil(first.0?.ACL)
 
-            XCTAssertNil(second.1)
-            guard let savedCreatedAt2 = second.0?.createdAt,
-                let savedUpdatedAt2 = second.0?.updatedAt else {
-                    XCTFail("Should unwrap dates")
+            switch result {
+
+            case .success(let saved):
+                guard let firstObject = saved.first,
+                    let secondObject = saved.last else {
+                    XCTFail("Should unwrap")
                     return
+                }
+
+                switch firstObject {
+
+                case .success(let first):
+                    guard let savedCreatedAt = first.createdAt,
+                        let savedUpdatedAt = first.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    guard let originalCreatedAt = scores.first?.createdAt,
+                        let originalUpdatedAt = scores.first?.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                     strategy, so we only compare the day*/
+                    XCTAssertTrue(Calendar.current.isDate(savedCreatedAt,
+                                                          equalTo: originalCreatedAt, toGranularity: .day))
+                    XCTAssertGreaterThan(savedUpdatedAt, originalUpdatedAt)
+                    XCTAssertNil(first.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+                switch secondObject {
+
+                case .success(let second):
+                    guard let savedCreatedAt2 = second.createdAt,
+                        let savedUpdatedAt2 = second.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    guard let originalCreatedAt2 = scores.last?.createdAt,
+                        let originalUpdatedAt2 = scores.last?.updatedAt else {
+                            XCTFail("Should unwrap dates")
+                            return
+                    }
+                    /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
+                     strategy, so we only compare the day*/
+                    XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2,
+                                                          equalTo: originalCreatedAt2, toGranularity: .day))
+                    XCTAssertGreaterThan(savedUpdatedAt2,
+                                         originalUpdatedAt2)
+                    XCTAssertNil(second.ACL)
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            guard let originalCreatedAt2 = scores.last?.createdAt,
-                let originalUpdatedAt2 = scores.last?.updatedAt else {
-                    XCTFail("Should unwrap dates")
-                    return
-            }
-            /*Date's are not exactly as their original because the URLMocking doesn't use the same dateEncoding
-             strategy, so we only compare the day*/
-            XCTAssertTrue(Calendar.current.isDate(savedCreatedAt2, equalTo: originalCreatedAt2, toGranularity: .day))
-            XCTAssertGreaterThan(savedUpdatedAt2,
-                                 originalUpdatedAt2)
-            XCTAssertNil(second.0?.ACL)
         }
         wait(for: [expectation1, expectation2], timeout: 10.0)
     }

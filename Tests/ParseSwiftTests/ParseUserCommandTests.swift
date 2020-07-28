@@ -578,9 +578,16 @@ class ParseUserCommandTests: XCTestCase { // swiftlint:disable:this type_body_le
     func logoutAsync(callbackQueue: DispatchQueue) {
 
         let expectation1 = XCTestExpectation(description: "Logout user1")
-        User.logout(callbackQueue: callbackQueue) { error in
+        User.logout(callbackQueue: callbackQueue) { result in
             expectation1.fulfill()
-            XCTAssertNil(error)
+
+            switch result {
+
+            case .success(let success):
+                XCTAssertTrue(success)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
+            }
         }
         wait(for: [expectation1], timeout: 10.0)
     }

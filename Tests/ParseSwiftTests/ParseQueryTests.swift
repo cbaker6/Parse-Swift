@@ -89,14 +89,21 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
     func findAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.find(options: [], callbackQueue: callbackQueue) { found, error in
+        query.find(options: [], callbackQueue: callbackQueue) { result in
             expectation.fulfill()
-            guard let score = found?.first else {
-                XCTFail("Should unwrap score count")
-                return
+
+            switch result {
+
+            case .success(let found):
+                guard let score = found.first else {
+                    XCTFail("Should unwrap score count")
+                    return
+                }
+                XCTAssertEqual(score, scoreOnServer)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertEqual(score, scoreOnServer)
-            XCTAssertNil(error)
+
         }
         wait(for: [expectation], timeout: 10.0)
     }
@@ -177,14 +184,17 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
     func firstAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.first(options: [], callbackQueue: callbackQueue) { found, error in
+        query.first(options: [], callbackQueue: callbackQueue) { result in
             expectation.fulfill()
-            guard let score = found else {
-                XCTFail("Should unwrap score count")
-                return
+
+            switch result {
+
+            case .success(let score):
+                XCTAssertEqual(score, scoreOnServer)
+
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertEqual(score, scoreOnServer)
-            XCTAssertNil(error)
         }
         wait(for: [expectation], timeout: 10.0)
     }
@@ -263,14 +273,17 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
 
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
-        query.count(options: [], callbackQueue: callbackQueue) { count, error in
+        query.count(options: [], callbackQueue: callbackQueue) { result in
             expectation.fulfill()
-            guard let scoreCount = count else {
-                XCTFail("Should unwrap score count")
-                return
+
+            switch result {
+
+            case .success(let scoreCount):
+                XCTAssertEqual(scoreCount, 1)
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
             }
-            XCTAssertEqual(scoreCount, 1)
-            XCTAssertNil(error)
+
         }
         wait(for: [expectation], timeout: 10.0)
     }
