@@ -80,7 +80,6 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
             }
             XCTAssertEqual(score, scoreOnServer)
         } catch {
-            print(error)
             XCTFail(error.localizedDescription)
         }
 
@@ -175,7 +174,6 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
             }
             XCTAssertEqual(score, scoreOnServer)
         } catch {
-            print(error)
             XCTFail(error.localizedDescription)
         }
 
@@ -263,14 +261,12 @@ class ParseQueryTests: XCTestCase { // swiftlint:disable:this type_body_length
             let scoreCount = try query.count(options: [])
             XCTAssertEqual(scoreCount, 1)
         } catch {
-            print(error)
             XCTFail(error.localizedDescription)
         }
 
     }
 
     func countAsync(scoreOnServer: GameScore, callbackQueue: DispatchQueue) {
-
         let query = GameScore.query()
         let expectation = XCTestExpectation(description: "Count object1")
         query.count(options: [], callbackQueue: callbackQueue) { result in

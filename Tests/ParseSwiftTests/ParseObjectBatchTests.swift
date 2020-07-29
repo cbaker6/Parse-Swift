@@ -342,7 +342,7 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         }
     }
 
-    func testUpdateAllErrorIncorrectServerResponse() { // swiftlint:disable:this function_body_length
+    func testUpdateAllErrorIncorrectServerResponse() {
         var score = GameScore(score: 10)
         score.objectId = "yarr"
         score.createdAt = Calendar.current.date(byAdding: .init(day: -1), to: Date())
@@ -371,21 +371,8 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
         do {
             let saved = try [score, score2].saveAll()
             XCTAssertEqual(saved.count, 2)
-            switch saved[0] {
-
-            case .success(_): // swiftlint:disable:this empty_enum_arguments
-                XCTFail("Should throw error instead of success")
-            case .failure(_): // swiftlint:disable:this empty_enum_arguments
-                print("Should throw error")
-            }
-
-            switch saved[1] {
-
-            case .success(_): // swiftlint:disable:this empty_enum_arguments
-                XCTFail("Should throw error instead of success")
-            case .failure(_): // swiftlint:disable:this empty_enum_arguments
-                print("Should throw error")
-            }
+            XCTAssertThrowsError(try saved[0].get())
+            XCTAssertThrowsError(try saved[1].get())
 
         } catch {
             XCTFail(error.localizedDescription)
@@ -395,21 +382,8 @@ class ParseObjectBatchTests: XCTestCase { // swiftlint:disable:this type_body_le
             let saved = try [score, score2].saveAll(options: [.useMasterKey])
 
             XCTAssertEqual(saved.count, 2)
-            switch saved[0] {
-
-            case .success(_): // swiftlint:disable:this empty_enum_arguments
-                XCTFail("Should throw error instead of success")
-            case .failure(_): // swiftlint:disable:this empty_enum_arguments
-                print("Should throw error")
-            }
-
-            switch saved[1] {
-
-            case .success(_): // swiftlint:disable:this empty_enum_arguments
-                XCTFail("Should throw error instead of success")
-            case .failure(_): // swiftlint:disable:this empty_enum_arguments
-                print("Should throw error")
-            }
+            XCTAssertThrowsError(try saved[0].get())
+            XCTAssertThrowsError(try saved[1].get())
 
         } catch {
             XCTFail(error.localizedDescription)
