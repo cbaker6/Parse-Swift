@@ -50,46 +50,8 @@ class APICommandTests: XCTestCase {
         }
     }
 
-    func testErrorServer() {
-        let originalError = ParseError(code: .connectionFailed, message: "no connection")
-        MockURLProtocol.mockRequests { response in
-            let response = MockURLResponse(error: originalError)
-            return response
-        }
-        do {
-            _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (data) -> NoBody in
-                    return try JSONDecoder().decode(NoBody.self, from: data)
-            }).execute(options: [])
-            XCTFail("Should have thrown an error")
-        } catch {
-            guard let error = error as? ParseError else {
-                XCTFail("should be able unwrap final error to ParseError")
-                return
-            }
-            XCTAssertTrue(error.message.contains(originalError.message))
-        }
-    }
-
-    func testHTTPError() {
-        let originalError = ParseError(code: .unknownError, message: "Couldn't decode")
-        MockURLProtocol.mockRequests { _ in
-            return MockURLResponse(error: originalError)
-        }
-        do {
-            _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (_) -> NoBody in
-                throw originalError
-            }).execute(options: [])
-            XCTFail("Should have thrown an error")
-        } catch {
-            guard let error = error as? ParseError else {
-                XCTFail("should be able unwrap final error to ParseError")
-                return
-            }
-            XCTAssertEqual(originalError.code, error.code)
-        }
-    }
-
-    func testServerError() {
+    //This is how errors from the server should typically come in
+    func testErrorFromParseServer() {
         let originalError = ParseError(code: .unknownError, message: "Couldn't decode")
         MockURLProtocol.mockRequests { _ in
             do {
@@ -115,7 +77,8 @@ class APICommandTests: XCTestCase {
         }
     }
 
-    func testNotParseErrorType() {
+    //This is how errors HTTP errors should typically come in
+    func testErrorHTTPJSON() {
         let errorKey = "error"
         let errorValue = "yarr"
         let codeKey = "code"
@@ -147,4 +110,46 @@ class APICommandTests: XCTestCase {
             XCTAssertEqual(unknownError.code, error.code)
         }
     }
+
+    //This is less common as the HTTP won't be able to produce ParseErrors directly, but used for testing
+    func testErrorHTTPReturnsParseError1() {
+        let originalError = ParseError(code: .connectionFailed, message: "no connection")
+        MockURLProtocol.mockRequests { response in
+            let response = MockURLResponse(error: originalError)
+            return response
+        }
+        do {
+            _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (data) -> NoBody in
+                    return try JSONDecoder().decode(NoBody.self, from: data)
+            }).execute(options: [])
+            XCTFail("Should have thrown an error")
+        } catch {
+            guard let error = error as? ParseError else {
+                XCTFail("should be able unwrap final error to ParseError")
+                return
+            }
+            XCTAssertTrue(error.message.contains(originalError.message))
+        }
+    }
+
+    //This is less common as the HTTP won't be able to produce ParseErrors directly, but used for testing
+    func testErrorHTTPReturnsParseError2() {
+        let originalError = ParseError(code: .unknownError, message: "Couldn't decode")
+        MockURLProtocol.mockRequests { _ in
+            return MockURLResponse(error: originalError)
+        }
+        do {
+            _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (_) -> NoBody in
+                throw originalError
+            }).execute(options: [])
+            XCTFail("Should have thrown an error")
+        } catch {
+            guard let error = error as? ParseError else {
+                XCTFail("should be able unwrap final error to ParseError")
+                return
+            }
+            XCTAssertEqual(originalError.code, error.code)
+        }
+    }
+
 }
