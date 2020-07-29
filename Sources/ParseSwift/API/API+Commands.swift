@@ -7,8 +7,10 @@
 //
 
 import Foundation
+import Combine
 
 internal extension API {
+
     struct Command<T, U>: Encodable where T: Encodable {
         typealias ReturnType = U // swiftlint:disable:this nesting
         let method: API.Method
@@ -34,6 +36,7 @@ internal extension API {
         }
 
         public func execute(options: API.Options) throws -> U {
+
             var responseResult: Result<U, ParseError>?
 
             let group = DispatchGroup()
@@ -90,6 +93,29 @@ internal extension API {
                     completion(.failure(error))
                 }
             }
+
+/*
+            if #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) {
+                _ = URLSession.shared.asyncDataTask(with: urlRequest)
+                    .sink(receiveCompletion: { errorCompletion in
+                        if case let .failure(error) = errorCompletion {
+                            completion(nil, error)
+                        }
+                    }, receiveValue: { responseData in
+
+                        guard let decoded = try? self.mapper(responseData) else {
+                            guard let parseError = try? getDecoder().decode(ParseError.self, from: responseData) else {
+                                completion(nil, ParseError(code: .unknownError, message: "cannot decode error"))
+                                return
+                            }
+                            completion(nil, parseError)
+                            return
+                        }
+                        completion(decoded, nil)
+                    })
+            } else {
+            */
+            //}
         }
 
         enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting

@@ -25,7 +25,7 @@ extension Sequence where Element: ObjectType {
         let commands = map { $0.saveCommand() }
         return try API.Command<Self.Element, Self.Element>
                 .batch(commands: commands)
-                .execute(options: options)
+            .execute(options: options)
     }
 
     public func saveAll(options: API.Options = [], callbackQueue: DispatchQueue = .main,
