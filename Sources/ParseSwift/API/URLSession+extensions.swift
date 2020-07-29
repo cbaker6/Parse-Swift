@@ -18,12 +18,13 @@ extension URLSession {
 
             guard let callbackQueue = callbackQueue else {
                 guard let responseData = responseData else {
-                    guard let error = responseError as? ParseError else {
+                    guard let error = responseError else {
                         completion(.failure(ParseError(code: .unknownError,
                                                        message: "Unable to sync: \(String(describing: urlResponse)).")))
                         return
                     }
-                    completion(.failure(error))
+                    completion(.failure(ParseError(code: .unknownError,
+                                                  message: "Unable to sync: \(error).")))
                     return
                 }
 

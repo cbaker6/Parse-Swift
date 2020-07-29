@@ -66,15 +66,41 @@ class APICommandTests: XCTestCase {
                 XCTFail("should be able unwrap final error to ParseError")
                 return
             }
-            XCTAssertEqual(originalError.code, error.code)
+            XCTAssertTrue(error.message.contains(originalError.message))
         }
     }
 
-    func testAPIError() {
+    func testHTTPError() {
         let originalError = ParseError(code: .unknownError, message: "Couldn't decode")
         MockURLProtocol.mockRequests { _ in
             return MockURLResponse(error: originalError)
         }
+        do {
+            _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (_) -> NoBody in
+                throw originalError
+            }).execute(options: [])
+            XCTFail("Should have thrown an error")
+        } catch {
+            guard let error = error as? ParseError else {
+                XCTFail("should be able unwrap final error to ParseError")
+                return
+            }
+            XCTAssertEqual(originalError.code, error.code)
+        }
+    }
+
+    func testServerError() {
+        let originalError = ParseError(code: .unknownError, message: "Couldn't decode")
+        MockURLProtocol.mockRequests { _ in
+            do {
+                let encoded = try JSONEncoder().encode(originalError)
+                return MockURLResponse(data: encoded, statusCode: 200, delay: 0.0)
+            } catch {
+                XCTFail("Should encode error")
+                return nil
+            }
+        }
+
         do {
             _ = try API.Command<NoBody, NoBody>(method: .GET, path: .login, params: nil, mapper: { (_) -> NoBody in
                 throw originalError
